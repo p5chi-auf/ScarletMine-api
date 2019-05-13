@@ -40,5 +40,4 @@ class Project
 
         return $this;
     }
-
 }
