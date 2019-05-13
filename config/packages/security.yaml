@@ -1,7 +1,15 @@
 security:
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    encoders:
+        App\Security\User\WebserviceUser:
+            algorithm: bcrypt
+            cost: 12
+
     providers:
         in_memory: { memory: ~ }
+#        webservice:
+#            id: App\Security\User\WebserviceUserProvider
+
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
