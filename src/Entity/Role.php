@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -38,5 +37,15 @@ class Role
     public function getRole(): string
     {
         return $this->role;
+    }
+
+    /**
+     * @param int $role
+     * @return Role
+     */
+    public function setRole(string $role): Role
+    {
+        $this->role = $role;
+        return $this;
     }
 }

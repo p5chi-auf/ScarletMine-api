@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class UserController extends AbstractController
-
 {
     /**
      * @Route("/api/users", name="user_add", methods={"POST"})
@@ -31,12 +30,9 @@ class UserController extends AbstractController
         $user->setUsername($data['username']);
         $user->setPassword($data['newPassword']);
 
-        foreach ($data['roles'] as $id) {
+        foreach ($data['roles'] as $role) {
             $repository = $em->getRepository(Role::class);
-            $roleEntity = $repository->findOneBy(['id' => $id]);
-            if ($roleEntity === null) {
-                return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
-            }
+            $roleEntity = $repository->findOneBy(['role' => $role]);
             $user->addUserRole($roleEntity);
         }
 
@@ -57,55 +53,12 @@ class UserController extends AbstractController
     public function editUser(Request $request, EntityManagerInterface $em, User $user)
     {
         $data = \json_decode($request->getContent(), true);
-
         if (empty($data['fullName'])) {
             return new JsonResponse(['error' => 'Empty fullName'], Response::HTTP_BAD_REQUEST);
         }
-
         if (!empty($data['newPassword'])) {
             $user->setPassword($data['newPassword']);
         }
-
-        $user->clearUserRole();
-
-        foreach ($data['roles'] as $id) {
-            $repository = $em->getRepository(Role::class);
-            $roleEntity = $repository->findOneBy(['id' => $id]);
-            if ($roleEntity === null) {
-                return new JsonResponse(['error' => 'RoleUser not found'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $user->addUserRole($roleEntity);
-        }
-
-        foreach ($user->getProjectRole() as $role) {
-
-            $em->remove($role);
-        }
-        $user->clearProjectRole();
-        $em->flush();
-
-        $repositoryProject = $em->getRepository(Project::class);
-        $repositoryRole = $em->getRepository(RoleProject::class);
-        foreach ($data['projectRoles'] as $projectId => $roleId) {
-            $roleEntity = $repositoryRole->find($roleId);
-            if ($roleEntity === null) {
-                return new JsonResponse(['error' => 'RoleProject ' . $roleId . ' not found'], Response::HTTP_BAD_REQUEST);
-            }
-
-            $projectEntity = $repositoryProject->find($projectId);
-            if ($projectEntity === null) {
-                return new JsonResponse(['error' => 'Project not found'], Response::HTTP_BAD_REQUEST);
-            }
-            $userProjectRole = new UserProjectRole();
-            $userProjectRole->setProject($projectEntity);
-            $userProjectRole->setUser($user);
-            $userProjectRole->setProjectRole($roleEntity);
-            $em->persist($userProjectRole);
-
-            $user->addProjectRole($userProjectRole);
-        }
-
         $user->setFullName($data['fullName']);
         $em->persist($user);
         $em->flush();
