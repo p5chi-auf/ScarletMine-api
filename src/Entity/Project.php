@@ -59,6 +59,7 @@ class Project
     public function setProject(UserProjectRole $project): Project
     {
         $this->project = $project;
+
         return $this;
     }
 

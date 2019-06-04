@@ -78,7 +78,7 @@ class UserController extends AbstractController
             $user->addUserRole($roleEntity);
         }
 
-        foreach($user->getProjectRole() as $role) {
+        foreach ($user->getProjectRole() as $role) {
 
             $em->remove($role);
         }
@@ -90,7 +90,7 @@ class UserController extends AbstractController
         foreach ($data['projectRoles'] as $projectId => $roleId) {
             $roleEntity = $repositoryRole->find($roleId);
             if ($roleEntity === null) {
-                return new JsonResponse(['error' => 'RoleProject '.$roleId.' not found'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['error' => 'RoleProject ' . $roleId . ' not found'], Response::HTTP_BAD_REQUEST);
             }
 
             $projectEntity = $repositoryProject->find($projectId);
