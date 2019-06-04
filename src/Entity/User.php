@@ -23,6 +23,7 @@ class User implements UserInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255)
+     * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
     private $username;
 
@@ -51,9 +52,16 @@ class User implements UserInterface
      */
     private $userRoles;
 
+    /**
+     * @var UserProjectRole[]|ArrayCollection
+     * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
+     */
+    private $projectRoles;
+
     public function __construct()
     {
         $this->userRoles = new ArrayCollection();
+        $this->projectRoles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -105,7 +113,7 @@ class User implements UserInterface
     /**
      * @return Role[]|ArrayCollection
      */
-    public function getRole()
+    public function getUserRoles()
     {
         return $this->userRoles;
     }
@@ -115,7 +123,11 @@ class User implements UserInterface
         if (!$this->userRoles->contains($role)) {
             $this->userRoles->add($role);
         }
+    }
 
+    public function clearUserRole(): void
+    {
+        $this->userRoles->clear();
     }
 
     public function getSalt()
@@ -126,5 +138,25 @@ class User implements UserInterface
     public function eraseCredentials()
     {
         // TODO: Implement eraseCredentials() method.
+    }
+
+    /**
+     * @return UserProjectRole[]|ArrayCollection
+     */
+    public function getProjectRole()
+    {
+        return $this->projectRoles;
+    }
+
+    public function addProjectRole(UserProjectRole $role): void
+    {
+        if (!$this->projectRoles->contains($role)) {
+            $this->projectRoles->add($role);
+        }
+    }
+
+    public function clearProjectRole(): void
+    {
+        $this->projectRoles->clear();
     }
 }

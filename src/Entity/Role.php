@@ -2,7 +2,6 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @ORM\Entity()
@@ -39,15 +38,4 @@ class Role
     {
         return $this->role;
     }
-
-    /**
-     * @param int $role
-     * @return Role
-     */
-    public function setRole(string $role): Role
-    {
-        $this->role = $role;
-        return $this;
-    }
-
 }
