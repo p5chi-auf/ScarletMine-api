@@ -4,11 +4,14 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
+ * @UniqueEntity("username")
  */
 class User implements UserInterface
 {
@@ -21,6 +24,8 @@ class User implements UserInterface
 
     /**
      * @var string
+     * @Assert\NotBlank(groups={"Registration","Profile"})
+     * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/", groups={"Registration","Profile"})
      *
      * @ORM\Column(type="string", length=255)
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
@@ -29,6 +34,7 @@ class User implements UserInterface
 
     /**
      * @var string
+     * @Assert\NotBlank
      *
      * @ORM\Column(type="string", length=255)
      */
@@ -36,6 +42,7 @@ class User implements UserInterface
 
     /**
      * @var string|null
+     * @Assert\NotBlank
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
