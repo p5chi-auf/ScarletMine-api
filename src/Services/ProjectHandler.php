@@ -14,10 +14,11 @@ class ProjectHandler
         $this->em = $em;
     }
 
-    public function validate($data, ?Project $project = null): bool
+    public function validate(array $data, ?Project $project = null): bool
     {
         $repository = $this->em->getRepository(Project::class);
         $existing = $repository->findOneBy(['name' => $data['name']]);
+
         if (empty($data['name'])) {
             return false;
         }
@@ -34,7 +35,7 @@ class ProjectHandler
         return true;
     }
 
-    public function save($data, ?Project $project = null): Project
+    public function save(array $data, ?Project $project = null): Project
     {
         if ($project === null) {
             $project = new Project();
