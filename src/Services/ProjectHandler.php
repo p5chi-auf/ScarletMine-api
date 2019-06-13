@@ -18,14 +18,15 @@ class ProjectHandler
     {
         $repository = $this->em->getRepository(Project::class);
         $existing = $repository->findOneBy(['name' => $data['name']]);
-        if ($existing) {
-            return false;
-        }
         if (empty($data['name'])) {
             return false;
         }
 
-        if ($project !== null && $existing && $existing->getId() !== $project->getId()) {
+        if ($existing && $project === null) {
+            return false;
+        }
+
+        if ($project !== null && $existing && $existing !== $project) {
             return false;
 
         }
