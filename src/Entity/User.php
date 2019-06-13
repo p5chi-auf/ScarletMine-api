@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -22,6 +23,7 @@ class User implements UserInterface
      * @var string
      *
      * @ORM\Column(type="string", length=255)
+     * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
     private $username;
 
@@ -40,9 +42,27 @@ class User implements UserInterface
     private $password;
 
     /**
-     * @ORM\Column(type="json")
+     * @var ArrayCollection|Role[]
+     * @ORM\ManyToMany(targetEntity="Role")
+     * @ORM\JoinTable(
+     *     name="users_roles",
+     *     joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="role_id", referencedColumnName="id")}
+     * )
      */
-    private $roles = [];
+    private $userRoles;
+
+    /**
+     * @var UserProjectRole[]|ArrayCollection
+     * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
+     */
+    private $projectRoles;
+
+    public function __construct()
+    {
+        $this->userRoles = new ArrayCollection();
+        $this->projectRoles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -85,20 +105,29 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getRoles(): array
+    public function getRoles()
     {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
+        return $this->userRoles;
     }
 
-    public function setRoles(array $roles): self
+    /**
+     * @return Role[]|ArrayCollection
+     */
+    public function getUserRoles()
     {
-        $this->roles = $roles;
+        return $this->userRoles;
+    }
 
-        return $this;
+    public function addUserRole(Role $role): void
+    {
+        if (!$this->userRoles->contains($role)) {
+            $this->userRoles->add($role);
+        }
+    }
+
+    public function clearUserRole(): void
+    {
+        $this->userRoles->clear();
     }
 
     public function getSalt()
@@ -111,4 +140,23 @@ class User implements UserInterface
         // TODO: Implement eraseCredentials() method.
     }
 
+    /**
+     * @return UserProjectRole[]|ArrayCollection
+     */
+    public function getProjectRole()
+    {
+        return $this->projectRoles;
+    }
+
+    public function addProjectRole(UserProjectRole $role): void
+    {
+        if (!$this->projectRoles->contains($role)) {
+            $this->projectRoles->add($role);
+        }
+    }
+
+    public function clearProjectRole(): void
+    {
+        $this->projectRoles->clear();
+    }
 }

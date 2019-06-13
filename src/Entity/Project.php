@@ -24,6 +24,12 @@ class Project
      */
     private $name;
 
+    /**
+     * @var UserProjectRole
+     * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="project")
+     */
+    private $project;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -34,10 +40,27 @@ class Project
         return $this->name;
     }
 
+    /**
+     * @param int $name
+     * @return Project
+     */
     public function setName(string $name): self
     {
         $this->name = $name;
 
         return $this;
     }
+
+    public function getProject(): UserProjectRole
+    {
+        return $this->project;
+    }
+
+    public function setProject(UserProjectRole $project): Project
+    {
+        $this->project = $project;
+
+        return $this;
+    }
+
 }
