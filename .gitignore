@@ -18,3 +18,8 @@
 /react/build
 /react/npm-debug.log
 /public/react/
+
+###> symfony/phpunit-bridge ###
+.phpunit
+/phpunit.xml
+###< symfony/phpunit-bridge ###
