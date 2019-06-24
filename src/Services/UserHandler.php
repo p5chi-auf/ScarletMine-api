@@ -19,7 +19,11 @@ class UserHandler
     private $validator;
     private $passwordEncoder;
 
-    public function __construct(EntityManagerInterface $em, ValidatorInterface $validator, UserPasswordEncoderInterface $passwordEncoder) {
+    public function __construct(
+        EntityManagerInterface $em,
+        ValidatorInterface $validator,
+        UserPasswordEncoderInterface $passwordEncoder
+    ) {
         $this->em = $em;
         $this->validator = $validator;
         $this->passwordEncoder = $passwordEncoder;
@@ -29,15 +33,12 @@ class UserHandler
     {
         if ($user->getId() === null) {
             $user->setUsername($data['username']);
-            $plainPassword = '1234';
-            $encodedPassword = $this->passwordEncoder->encodePassword($user, $plainPassword);
-            $user->setPassword($encodedPassword);
         }
 
         $user->setFullName($data['fullName']);
 
         if (!empty($data['newPassword'])) {
-            $user->setPassword($data['newPassword']);
+            $user->setPassword($this->passwordEncoder->encodePassword($user, $data['newPassword']));
         }
 
         $errors = $this->validator->validate($user);
