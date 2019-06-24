@@ -3,9 +3,13 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ProjectRepository")
+ * @ORM\Table(name="project")
+ * @UniqueEntity("name")
  */
 class Project
 {
@@ -20,15 +24,18 @@ class Project
 
     /**
      * @var string
+     * @Assert\NotBlank
+     *
      * @ORM\Column(type="string", length=50)
      */
     private $name;
 
     /**
-     * @var UserProjectRole
+     * @var UserProjectRole[]
+     *
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="project")
      */
-    private $project;
+    private $users;
 
     public function getId(): ?int
     {
@@ -50,17 +57,4 @@ class Project
 
         return $this;
     }
-
-    public function getProject(): UserProjectRole
-    {
-        return $this->project;
-    }
-
-    public function setProject(UserProjectRole $project): Project
-    {
-        $this->project = $project;
-
-        return $this;
-    }
-
 }
