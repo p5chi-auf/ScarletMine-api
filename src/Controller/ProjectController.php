@@ -24,15 +24,13 @@ class ProjectController extends AbstractController
      */
     public function addAction(Request $request): JsonResponse
     {
-
+        $project = new Project();
         $data = \json_decode($request->getContent(), true);
 
-        $isValid = $this->handler->validate($data);
-        if (!$isValid) {
-            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+        $errors = $this->handler->updateProject($data, $project);
+        if ($errors->count()) {
+            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
-
-        $project = $this->handler->save($data);
 
         return new JsonResponse($project->getId());
     }
@@ -44,13 +42,10 @@ class ProjectController extends AbstractController
     {
         $data = \json_decode($request->getContent(), true);
 
-        $isValid = $this->handler->validate($data, $project);
-        if ($isValid) {
-            $project = $this->handler->save($data, $project);
-        }
+        $errors = $this->handler->updateProject($data, $project);
 
-        if ($isValid === false) {
-            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+        if ($errors->count()) {
+            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
 
         return new JsonResponse($project->getId());

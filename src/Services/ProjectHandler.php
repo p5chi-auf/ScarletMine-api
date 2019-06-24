@@ -4,69 +4,55 @@ namespace App\Services;
 
 use App\Entity\Project;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ProjectHandler
 {
     private $em;
+    private $validator;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, ValidatorInterface $validator)
     {
         $this->em = $em;
+        $this->validator = $validator;
     }
 
-    public function validate(array $data, ?Project $project = null): bool
+    public function updateProject(array $data, Project $project): ConstraintViolationListInterface
     {
-        $repository = $this->em->getRepository(Project::class);
-        $existing = $repository->findOneBy(['name' => $data['name']]);
-
-        if (empty($data['name'])) {
-            return false;
+        if ($project->getId() === null) {
+            $project->setName(trim($data['name']));
         }
 
-        if ($existing && $project === null) {
-            return false;
+        $errors = $this->validator->validate($project);
+
+        if ($errors->count() === 0) {
+            $this->em->persist($project);
+            $this->em->flush();
         }
 
-        if ($project !== null && $existing && $existing !== $project) {
-            return false;
-
-        }
-
-        return true;
+        return $errors;
     }
 
-    public function save(array $data, ?Project $project = null): Project
-    {
-        if ($project === null) {
-            $project = new Project();
+        public function getList(): array
+        {
+            $repository = $this->em->getRepository(Project::class);
+            $projects = $repository->findAll();
+            $arr = [];
+            foreach ($projects as $proj) {
+                $arr [] = [
+                    'id' => $proj->getId(),
+                    'name' => $proj->getName(),
+                ];
+            }
+
+            return $arr;
         }
 
-        $project->setName($data['name']);
-        $this->em->persist($project);
-        $this->em->flush();
-
-        return $project;
-    }
-
-    public function getList(): array
-    {
-        $repository = $this->em->getRepository(Project::class);
-        $projects = $repository->findAll();
-        $arr = [];
-        foreach ($projects as $proj) {
-            $arr [] = [
-                'id' => $proj->getId(),
-                'name' => $proj->getName(),
-            ];
+        public function delete(Project $project): void
+        {
+            $this->em->remove($project);
+            $this->em->flush();
         }
-
-        return $arr;
-    }
-
-    public function delete(Project $project): void
-    {
-        $this->em->remove($project);
-        $this->em->flush();
-    }
 
 }

@@ -6,17 +6,24 @@ namespace App\Entity;
 use App\Services\ProjectHandler;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\TestCase;
+
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 
-class ProjectHandlerTest extends TestCase
+class ProjectHandlerTest extends KernelTestCase
 {
+    public function setUp()
+    {
+        self::bootKernel();
+    }
+
     public function testValidateEmptyName(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->validate(['name' => null]);
-
-        $this->assertFalse($result);
+        $result = $handler->updateProject(['name' => ' '], new Project());
+        $this->assertCount(1, $result);
+        $this->assertEquals('name', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
     }
 
     private function getHandler(): ProjectHandler
@@ -27,8 +34,7 @@ class ProjectHandlerTest extends TestCase
             ->method('getRepository')
             ->willReturn($repositoryMock);
 
-        return new ProjectHandler($emMock);
-
+        return new ProjectHandler($emMock, static::$container->get('validator'));
     }
 
     public function testValidateNewExistingName(): void
@@ -41,11 +47,11 @@ class ProjectHandlerTest extends TestCase
         $emMock
             ->method('getRepository')
             ->willReturn($repositoryMock);
-        $handler = new ProjectHandler($emMock);
-
-        $result = $handler->validate(['name' => 'name']);
-
-        $this->assertFalse($result);
+        $handler = $this->getHandler();
+        $result = $handler->updateProject(['name' => 'name'], new Project());
+        $this->assertCount(1, $result);
+        $this->assertEquals('name', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value is already used.', $result->get(0)->getMessage());
     }
 
     public function testValidateEditOk(): void
@@ -59,11 +65,9 @@ class ProjectHandlerTest extends TestCase
         $emMock
             ->method('getRepository')
             ->willReturn($repositoryMock);
-
-        $handler = new ProjectHandler($emMock);
-        $result = $handler->validate(['name' => 'name'], $project);
-
-        $this->assertTrue($result);
+        $handler = $this->getHandler();
+        $result = $handler->updateProject(['name' => 'name1'], $project);
+        $this->assertCount(0, $result);
     }
 
     public function testValidateEditNotOK(): void
@@ -78,14 +82,14 @@ class ProjectHandlerTest extends TestCase
         $emMock
             ->method('getRepository')
             ->willReturn($repositoryMock);
-
-        $handler = new ProjectHandler($emMock);
-        $result = $handler->validate(['name' => 'name'], $project2);
-
-        $this->assertFalse($result);
+        $handler = $this->getHandler();
+        $result = $handler->updateProject(['name' => 'name'], $project2);
+        $this->assertCount(1, $result);
+        $this->assertEquals('name', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value is already used.', $result->get(0)->getMessage());
     }
 
-    public function testValidateNewName(): void
+    public function testValidateNewNameOK(): void
     {
         $project = new Project();
         $repositoryMock = $this->createMock(ObjectRepository::class);
@@ -96,47 +100,31 @@ class ProjectHandlerTest extends TestCase
         $emMock
             ->method('getRepository')
             ->willReturn($repositoryMock);
-
-        $handler = new ProjectHandler($emMock);
-        $result = $handler->validate(['name' => 'name'], $project);
-
-        $this->assertTrue($result);
+        $handler = $this->getHandler();
+        $result = $handler->updateProject(['name' => 'name1'], $project);
+        $this->assertCount(0, $result);
     }
 
     public function testSaveNullName(): void
     {
         $emMock = $this->createMock(EntityManagerInterface::class);
         $emMock
-            ->expects($this->once())
             ->method('persist');
-
-        $handler = new ProjectHandler($emMock);
-        $result = $handler->save(['name' => 'name'], null);
-
-        $this->assertNotNull($result);
-    }
-
-    public function testSaveNotNullName(): void
-    {
-        $project = new Project();
-        $emMock = $this->createMock(EntityManagerInterface::class);
-        $emMock
-            ->expects($this->once())
-            ->method('persist');
-
-        $handler = new ProjectHandler($emMock);
-        $result = $handler->save(['name' => 'name1'], $project);
-
-        $this->assertEquals('name1', $result->getName());
-
+        $handler = $this->getHandler();
+        $result = $handler->updateProject(['name' => null], new Project());
+        $this->assertCount(1, $result);
+        $this->assertEquals('name', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
     }
 
     public function testGetListName(): void
     {
         $project1 = new Project();
+        $project1->getId();
         $project1->setName('name1');
 
         $project2 = new Project();
+        $project2->getId();
         $project2->setName('name2');
 
         $repositoryMock = $this->createMock(ObjectRepository::class);
@@ -145,20 +133,19 @@ class ProjectHandlerTest extends TestCase
             ->method('findAll')
             ->willReturn([$project1, $project2]);
         $emMock
-            ->expects($this->once())
             ->method('getRepository')
             ->willReturn($repositoryMock);
-
-        $handler = new ProjectHandler($emMock);
+        $handler = new ProjectHandler($emMock, static::$container->get('validator'));
         $result = $handler->getList();
-
         $this->assertEquals(
             [
                 ['id' => null, 'name' => 'name1'],
                 ['id' => null, 'name' => 'name2'],
-
             ],
-            $result
+            $result,
+            '$result'
         );
+
+        $this->assertCount(2, $result);
     }
 }
