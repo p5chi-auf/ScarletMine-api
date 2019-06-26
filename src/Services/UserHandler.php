@@ -8,8 +8,8 @@ use App\Entity\RoleProject;
 use App\Entity\User;
 use App\Entity\UserProjectRole;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolation;
-use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -17,24 +17,28 @@ class UserHandler
 {
     private $em;
     private $validator;
+    private $passwordEncoder;
 
-    public function __construct(EntityManagerInterface $em, ValidatorInterface $validator)
-    {
+    public function __construct(
+        EntityManagerInterface $em,
+        ValidatorInterface $validator,
+        UserPasswordEncoderInterface $passwordEncoder
+    ) {
         $this->em = $em;
         $this->validator = $validator;
+        $this->passwordEncoder = $passwordEncoder;
     }
 
     public function updateUser($data, User $user): ConstraintViolationListInterface
     {
         if ($user->getId() === null) {
             $user->setUsername($data['username']);
-            $user->setPassword($data['newPassword']);
         }
 
         $user->setFullName($data['fullName']);
 
         if (!empty($data['newPassword'])) {
-            $user->setPassword($data['newPassword']);
+            $user->setPassword($this->passwordEncoder->encodePassword($user, $data['newPassword']));
         }
 
         $errors = $this->validator->validate($user);
@@ -137,6 +141,7 @@ class UserHandler
                 'roles' => $roles,
             ];
         }
+
         return $arr;
     }
 }
