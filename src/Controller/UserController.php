@@ -21,6 +21,7 @@ class UserController extends AbstractController
     }
 
     /**
+     * @Route("/api/user-register", name="user_register", methods={"POST"})
      * @Route("/api/users", name="user_add", methods={"POST"})
      */
     public function addUser(Request $request): JsonResponse
