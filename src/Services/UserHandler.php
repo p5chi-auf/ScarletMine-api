@@ -41,77 +41,16 @@ class UserHandler
             $user->setPassword($this->passwordEncoder->encodePassword($user, $data['newPassword']));
         }
 
+        $userRolesErrors = $this->updateUserRoles($data, $user);
+        $userProjectRolesErrors = $this->updateUserProjectRole($data, $user);
+
         $errors = $this->validator->validate($user);
-        $user->clearUserRole();
 
-        foreach ($data['roles'] as $id) {
-            $repository = $this->em->getRepository(Role::class);
-            $roleEntity = $repository->find($id);
-            if (!$roleEntity) {
-                $errors->add(
-                    new ConstraintViolation(
-                        \sprintf('Role %s not found', $id),
-                        '',
-                        [],
-                        $id,
-                        'roles',
-                        $id
-                    )
-                );
-
-                continue;
-            }
-            $user->addUserRole($roleEntity);
+        foreach ($userRolesErrors as $error) {
+            $errors->add($error);
         }
-
-        foreach ($user->getProjectRole() as $role) {
-            $this->em->remove($role);
-        }
-
-        $user->clearProjectRole();
-        $repositoryProject = $this->em->getRepository(Project::class);
-        $repositoryRole = $this->em->getRepository(RoleProject::class);
-
-        foreach ($data['projectRoles'] as $projectId => $roleId) {
-            $roleEntity = $repositoryRole->find($roleId);
-            $projectEntity = $repositoryProject->find($projectId);
-
-            if (!$projectEntity) {
-                $errors->add(
-                    new ConstraintViolation(
-                        \sprintf('Project %s not found', $projectId),
-                        '',
-                        [],
-                        $projectId,
-                        'projectRoles',
-                        $projectId
-                    )
-                );
-
-                continue;
-            }
-
-            if (!$roleEntity) {
-                $errors->add(
-                    new ConstraintViolation(
-                        \sprintf('Role Project %s not found', $roleId),
-                        '',
-                        [],
-                        $roleId,
-                        'projectRoles',
-                        $roleId
-                    )
-                );
-
-                continue;
-            }
-
-            $userProjectRole = new UserProjectRole();
-            $userProjectRole->setProject($projectEntity);
-            $userProjectRole->setUser($user);
-            $userProjectRole->setProjectRole($roleEntity);
-            $this->em->persist($userProjectRole);
-            $user->addProjectRole($userProjectRole);
+        foreach ($userProjectRolesErrors as $error) {
+            $errors->add($error);
         }
 
         if ($errors->count() === 0) {
@@ -141,7 +80,87 @@ class UserHandler
                 'roles' => $roles,
             ];
         }
-
         return $arr;
+    }
+
+    public function updateUserRoles($data, User $user): array
+    {
+
+        $errors = [];
+        $user->clearUserRole();
+
+        foreach ($data['roles'] as $id) {
+            $repository = $this->em->getRepository(Role::class);
+            $roleEntity = $repository->find($id);
+            if (!$roleEntity) {
+                $errors[] =
+                    new ConstraintViolation(
+                        \sprintf('Role %s not found', $id),
+                        '',
+                        [],
+                        $id,
+                        'userRoles',
+                        $id
+                    );
+
+                continue;
+            }
+            $user->addUserRole($roleEntity);
+        }
+
+        return $errors;
+    }
+
+    public function updateUserProjectRole($data, User $user): array
+    {
+        $errors = [];
+        foreach ($user->getProjectRole() as $role) {
+            $this->em->remove($role);
+        }
+
+        $user->clearProjectRole();
+        $repositoryProject = $this->em->getRepository(Project::class);
+        $repositoryRole = $this->em->getRepository(RoleProject::class);
+
+        foreach ($data['projectRoles'] as $projectId => $roleId) {
+            $roleEntity = $repositoryRole->find($roleId);
+            $projectEntity = $repositoryProject->find($projectId);
+
+            if (!$projectEntity) {
+                $errors[] =
+                    new ConstraintViolation(
+                        \sprintf('Project %s not found', $projectId),
+                        '',
+                        [],
+                        $projectId,
+                        'projectRoles',
+                        $projectId
+                    );
+
+                continue;
+            }
+
+            if (!$roleEntity) {
+                $errors[] =
+                new ConstraintViolation(
+                    \sprintf('Role Project %s not found', $roleId),
+                    '',
+                    [],
+                    $roleId,
+                    'projectRoles',
+                    $roleId
+                );
+
+                continue;
+            }
+
+            $userProjectRole = new UserProjectRole();
+            $userProjectRole->setProject($projectEntity);
+            $userProjectRole->setUser($user);
+            $userProjectRole->setProjectRole($roleEntity);
+            $this->em->persist($userProjectRole);
+            $user->addProjectRole($userProjectRole);
+        }
+        return $errors;
     }
 }
