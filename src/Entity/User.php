@@ -24,8 +24,8 @@ class User implements UserInterface
 
     /**
      * @var string
-     * @Assert\NotBlank(groups={"Registration","Profile"})
-     * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/", groups={"Registration","Profile"})
+     * @Assert\NotBlank
+     * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/")
      *
      * @ORM\Column(type="string", length=255)
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
@@ -33,7 +33,7 @@ class User implements UserInterface
     private $username;
 
     /**
-     * @var string
+     * @var string|null
      * @Assert\NotBlank
      *
      * @ORM\Column(type="string", length=255)
@@ -50,6 +50,7 @@ class User implements UserInterface
 
     /**
      * @var ArrayCollection|Role[]
+     * @Assert\Count(min=1)
      * @ORM\ManyToMany(targetEntity="Role")
      * @ORM\JoinTable(
      *     name="users_roles",
@@ -81,6 +82,9 @@ class User implements UserInterface
         return $this->username;
     }
 
+    /**
+     * @return string|null
+     */
     public function setUsername(string $username): self
     {
         $this->username = $username;
@@ -112,7 +116,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return [];
     }
