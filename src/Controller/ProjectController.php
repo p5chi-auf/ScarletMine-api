@@ -49,7 +49,6 @@ class ProjectController extends AbstractController
         }
 
         return new JsonResponse($project->getId());
-
     }
 
     /**

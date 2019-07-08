@@ -3,8 +3,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TaskRepository")
@@ -12,6 +12,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Task
 {
+    /**
+     * @var ArrayCollection|User[]
+     * @ORM\ManyToMany(targetEntity="User")
+     * @ORM\JoinTable(
+     *     name="user_task",
+     *     joinColumns={@ORM\JoinColumn(name="task_id", referencedColumnName="id")},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")}
+     * )
+     */
+    protected $users;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -21,61 +32,52 @@ class Task
 
     /**
      * @var string
-     * @Assert\NotBlank()
      * @ORM\Column(type="string", length=255)
      */
     private $title;
 
     /**
      * @var string
-     * @Assert\NotBlank()
      * @ORM\Column(type="string", length=255)
      */
-
     private $description;
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @ORM\ManyToMany(targetEntity="User", mappedBy="username")
-     */
-    private $users;
 
     /**
      * @var int
-     * @Assert\NotBlank()
      * @ORM\Column(type="string", length=255)
      */
     private $status;
-    /**
-     * @ORM\Column(type="string", length=255)
-     * @ORM\OneToMany(targetEntity="Project", mappedBy="name")
-     */
-    private $projects;
 
     /**
-     * @var string
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToOne(targetEntity="Project", inversedBy="task")
+     * @ORM\JoinColumn(nullable=false)
      */
-    private $comments;
+    private $project;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="datetime", nullable=true)
      */
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $createdBy;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $updatedBy;
+
+    public function __construct()
+    {
+        $this->users = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -107,14 +109,27 @@ class Task
         return $this;
     }
 
-    public function getUsers()
+    /**
+     * @return User[]|ArrayCollection
+     */
+    public function getUsers(): ?iterable
     {
         return $this->users;
     }
 
-    public function setUsers($users): void
+    /**
+     * @param User $user
+     */
+    public function addUser(User $user): void
     {
-        $this->users = $users;
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+        }
+    }
+
+    public function clearUser(): void
+    {
+        $this->users->clear();
     }
 
     public function getStatus(): int
@@ -127,24 +142,16 @@ class Task
         $this->status = $status;
     }
 
-    public function getComments(): string
+    public function getProject(): ?Project
     {
-        return $this->comments;
+        return $this->project;
     }
 
-    public function setComments(string $comments): void
+    public function setProject(Project $project): self
     {
-        $this->comments = $comments;
-    }
-    
-    public function getProjects()
-    {
-        return $this->projects;
-    }
+        $this->project = $project;
 
-    public function setProjects($projects): void
-    {
-        $this->projects = $projects;
+        return $this;
     }
 
     public function getCreatedAt()

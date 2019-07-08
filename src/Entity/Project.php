@@ -5,6 +5,9 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Tests\Mapping\Loader\AbstractStaticLoader;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ProjectRepository")
@@ -37,6 +40,16 @@ class Project
      */
     private $users;
 
+    /**
+     * @ORM\OneToMany(targetEntity="Task", mappedBy="project")
+     */
+    private $tasks;
+
+    public function __construct()
+    {
+        $this->tasks = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -55,6 +68,33 @@ class Project
     {
         $this->name = $name;
 
+        return $this;
+    }
+
+    /**
+     * @return Collection|Task[]
+     */
+    public function getComments(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function addComment(Task $tasks): self
+    {
+        if (!$this->tasks->contains($tasks)) {
+            $this->tasks[] = $tasks;
+            $tasks->setProject($this);
+        }
+
+    }
+    public function removeTask(Task $tasks): self
+    {
+        if ($this->tasks->contains($tasks)) {
+            $this->tasks->removeElement($tasks);
+            if ($tasks->getProject() === $this) {
+                $tasks->setProject(null);
+            }
+        }
         return $this;
     }
 }
