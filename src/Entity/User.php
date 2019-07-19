@@ -26,7 +26,6 @@ class User implements UserInterface
      * @var string
      * @Assert\NotBlank
      * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/")
-     *
      * @ORM\Column(type="string", length=255)
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
@@ -34,14 +33,12 @@ class User implements UserInterface
     /**
      * @var string|null
      * @Assert\NotBlank
-     *
      * @ORM\Column(type="string", length=255)
      */
     private $fullName;
     /**
      * @var string|null
      * @Assert\NotBlank
-     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $password;

@@ -79,7 +79,6 @@ class UserHandler
         }
 
         $user->setfullName($dto->fullName);
-        $user->setPassword($dto->password);
         if (!empty($dto->password)) {
             $user->setPassword($this->passwordEncoder->encodePassword($user, $dto->password));
         }
