@@ -21,7 +21,6 @@ class User implements UserInterface
      * @ORM\Column(type="integer")
      */
     private $id;
-
     /**
      * @var string
      * @Assert\NotBlank
@@ -31,7 +30,6 @@ class User implements UserInterface
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
     private $username;
-
     /**
      * @var string|null
      * @Assert\NotBlank
@@ -39,7 +37,6 @@ class User implements UserInterface
      * @ORM\Column(type="string", length=255)
      */
     private $fullName;
-
     /**
      * @var string|null
      * @Assert\NotBlank
@@ -47,7 +44,6 @@ class User implements UserInterface
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $password;
-
     /**
      * @var ArrayCollection|Role[]
      * @Assert\Count(min=1)
@@ -59,7 +55,6 @@ class User implements UserInterface
      * )
      */
     private $userRoles;
-
     /**
      * @var UserProjectRole[]|ArrayCollection
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
@@ -88,7 +83,6 @@ class User implements UserInterface
     public function setUsername(string $username): self
     {
         $this->username = $username;
-
         return $this;
     }
 
@@ -100,7 +94,6 @@ class User implements UserInterface
     public function setFullName(string $fullName): self
     {
         $this->fullName = $fullName;
-
         return $this;
     }
 
@@ -112,7 +105,6 @@ class User implements UserInterface
     public function setPassword(?string $password): self
     {
         $this->password = $password;
-
         return $this;
     }
 

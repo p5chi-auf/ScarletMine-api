@@ -2,12 +2,16 @@
 
 namespace App\Services;
 
-use App\Entity\Project;
-use App\Entity\Role;
 use App\Entity\RoleProject;
 use App\Entity\User;
 use App\Entity\UserProjectRole;
+use App\Entity\Role;
+use App\Entity\Project;
+use App\Repository\ProjectRepository;
+use App\Repository\RoleProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\UserRepository;
+use App\Repository\RoleRepository;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -15,63 +19,86 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserHandler
 {
-    private $em;
+    /**
+     * @var ValidatorInterface
+     */
     private $validator;
+
+    /**
+     * @var RoleRepository
+     */
+    private $roleRepository;
+
+    /**
+     * @var UserRepository
+     */
+    private $userRepository;
+
+    /**
+     * @var ProjectRepository
+     */
+    private $projectRepository;
+
+    /**
+     * @var RoleProjectRepository
+     */
+    private $roleProjectRepository;
+
     private $passwordEncoder;
+
+    private $em;
 
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
         UserPasswordEncoderInterface $passwordEncoder
-    ) {
+    )
+    {
         $this->em = $em;
         $this->validator = $validator;
         $this->passwordEncoder = $passwordEncoder;
+        $this->userRepository = $this->em->getRepository(User::class);
+        $this->roleRepository = $this->em->getRepository(Role::class);
+        $this->projectRepository = $this->em->getRepository(Project::class);
+        $this->roleProjectRepository = $this->em->getRepository(RoleProject::class);
     }
 
-    public function updateUser($data, User $user): ConstraintViolationListInterface
+    public function updateUser($dto, User $user): ConstraintViolationListInterface
     {
         if ($user->getId() === null) {
-            $user->setUsername($data['username']);
+            $user->setUsername($dto->username);
         }
 
-        $user->setFullName($data['fullName']);
-
-        if (!empty($data['newPassword'])) {
-            $user->setPassword($this->passwordEncoder->encodePassword($user, $data['newPassword']));
+        $user->setfullName($dto->fullName);
+        $user->setPassword($dto->password);
+        if (!empty($dto->password)) {
+            $user->setPassword($this->passwordEncoder->encodePassword($user, $dto->password));
         }
-
-        $userRolesErrors = $this->updateUserRoles($data, $user);
-        $userProjectRolesErrors = $this->updateUserProjectRole($data, $user);
-
+        $userRolesErrors = $this->updateUserRoles($dto, $user);
+        $userProjectRolesErrors = $this->updateUserProjectRole($dto, $user);
         $errors = $this->validator->validate($user);
-
         foreach ($userRolesErrors as $error) {
             $errors->add($error);
         }
         foreach ($userProjectRolesErrors as $error) {
             $errors->add($error);
         }
-
         if ($errors->count() === 0) {
             $this->em->persist($user);
             $this->em->flush();
         }
-
         return $errors;
     }
 
     public function getList(): array
     {
-        $repository = $this->em->getRepository(User::class);
-        $users = $repository->findAll();
+        $users = $this->userRepository->findAll();
         $arr = [];
         foreach ($users as $user) {
             $roles = [];
             foreach ($user->getUserRoles() as $role) {
                 $roles[] = $role->getRole();
             }
-
             $arr[] = [
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
@@ -83,15 +110,12 @@ class UserHandler
         return $arr;
     }
 
-    public function updateUserRoles($data, User $user): array
+    public function updateUserRoles($dto, User $user): array
     {
-
         $errors = [];
         $user->clearUserRole();
-
-        foreach ($data['roles'] as $id) {
-            $repository = $this->em->getRepository(Role::class);
-            $roleEntity = $repository->find($id);
+        foreach ($dto->role as $id) {
+            $roleEntity = $this->roleRepository->find($id);
             if (!$roleEntity) {
                 $errors[] =
                     new ConstraintViolation(
@@ -102,30 +126,24 @@ class UserHandler
                         'userRoles',
                         $id
                     );
-
                 continue;
             }
             $user->addUserRole($roleEntity);
         }
-
         return $errors;
     }
 
-    public function updateUserProjectRole($data, User $user): array
+    public function updateUserProjectRole($dto, User $user): array
     {
         $errors = [];
         foreach ($user->getProjectRole() as $role) {
             $this->em->remove($role);
         }
-
         $user->clearProjectRole();
-        $repositoryProject = $this->em->getRepository(Project::class);
-        $repositoryRole = $this->em->getRepository(RoleProject::class);
 
-        foreach ($data['projectRoles'] as $projectId => $roleId) {
-            $roleEntity = $repositoryRole->find($roleId);
-            $projectEntity = $repositoryProject->find($projectId);
-
+        foreach ($dto->projectRoles as $projectId => $roleId) {
+            $roleEntity = $this->roleProjectRepository->find($roleId);
+            $projectEntity = $this->projectRepository->find($projectId);
             if (!$projectEntity) {
                 $errors[] =
                     new ConstraintViolation(
@@ -136,24 +154,20 @@ class UserHandler
                         'projectRoles',
                         $projectId
                     );
-
                 continue;
             }
-
             if (!$roleEntity) {
                 $errors[] =
-                new ConstraintViolation(
-                    \sprintf('Role Project %s not found', $roleId),
-                    '',
-                    [],
-                    $roleId,
-                    'projectRoles',
-                    $roleId
-                );
-
+                    new ConstraintViolation(
+                        \sprintf('Role Project %s not found', $roleId),
+                        '',
+                        [],
+                        $roleId,
+                        'projectRoles',
+                        $roleId
+                    );
                 continue;
             }
-
             $userProjectRole = new UserProjectRole();
             $userProjectRole->setProject($projectEntity);
             $userProjectRole->setUser($user);

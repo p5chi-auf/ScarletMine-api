@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\DTO\UserDTO;
 use App\Services\UserHandler;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -69,13 +70,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyUsername(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => '',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = '';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());
@@ -85,13 +87,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyNewPassword(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea20',
-            'newPassword' => '',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('password', $result->get(0)->getPropertyPath());
@@ -101,13 +104,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyFullName(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea20',
-            'newPassword' => '1234',
-            'fullName' => '',
-            'roles' => [1],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = '';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('fullName', $result->get(0)->getPropertyPath());
@@ -117,13 +121,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyRoles(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea21',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('userRoles', $result->get(0)->getPropertyPath());
@@ -133,13 +138,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidRole(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea21',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1, 2],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1, 2];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('userRoles', $result->get(0)->getPropertyPath());
@@ -149,13 +155,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyUserProjectRoles(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea22',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1],
-            'projectRoles' => []
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = [];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(0, $result);
     }
@@ -163,13 +170,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidUserProjectRole(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea21',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1],
-            'projectRoles' => ['1' => '2']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '2'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('projectRoles', $result->get(0)->getPropertyPath());
@@ -179,13 +187,14 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidUserProject(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea21',
-            'newPassword' => '1234',
-            'fullName' => 'Ion Guidea',
-            'roles' => [1],
-            'projectRoles' => ['2' => '1']
-        ], new User());
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = ['2' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('projectRoles', $result->get(0)->getPropertyPath());
@@ -202,15 +211,16 @@ class UserHandlerTest extends KernelTestCase
         $emMock
             ->method('getRepository')
             ->willReturn($repositoryMock);
-        $handler = $this->getHandler();
 
-        $result = $handler->updateUser([
-            'username' => 'iguidea',
-            'newPassword' => '1234',
-            'fullName' => 'Ion',
-            'roles' => [1],
-            'projectRoles' => ['1' => '1']
-        ], new User());
+        $handler = $this->getHandler();
+        $dto = new UserDTO();
+        $dto->username = 'iguidea';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());
@@ -222,13 +232,14 @@ class UserHandlerTest extends KernelTestCase
         $user = new User();
 
         $handler = $this->getHandler();
-        $result = $handler->updateUser([
-            'username' => 'iguidea2',
-            'newPassword' => '1234',
-            'fullName' => 'Ion',
-            'roles' => [1],
-            'projectRoles' => ['1' => '1'],
-        ], $user);
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = '1234';
+        $dto->role = [1, 3];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, $user);
 
         $this->assertCount(0, $result);
     }
