@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTO\UserDTO;
 use App\Entity\RoleProject;
 use App\Entity\User;
 use App\Entity\UserProjectRole;
@@ -44,8 +45,14 @@ class UserHandler
      */
     private $roleProjectRepository;
 
+    /**
+     * @var UserPasswordEncoderInterface
+     */
     private $passwordEncoder;
 
+    /**
+     * @var EntityManagerInterface
+     */
     private $em;
 
     public function __construct(
@@ -63,10 +70,12 @@ class UserHandler
         $this->roleProjectRepository = $this->em->getRepository(RoleProject::class);
     }
 
-    public function updateUser($dto, User $user): ConstraintViolationListInterface
+    public function updateUser(UserDTO $dto, User $user): ConstraintViolationListInterface
     {
         if ($user->getId() === null) {
             $user->setUsername($dto->username);
+            $user->setPassword($dto->password);
+
         }
 
         $user->setfullName($dto->fullName);
@@ -110,7 +119,7 @@ class UserHandler
         return $arr;
     }
 
-    public function updateUserRoles($dto, User $user): array
+    public function updateUserRoles(UserDTO $dto, User $user): array
     {
         $errors = [];
         $user->clearUserRole();
@@ -133,7 +142,7 @@ class UserHandler
         return $errors;
     }
 
-    public function updateUserProjectRole($dto, User $user): array
+    public function updateUserProjectRole(UserDTO $dto, User $user): array
     {
         $errors = [];
         foreach ($user->getProjectRole() as $role) {
