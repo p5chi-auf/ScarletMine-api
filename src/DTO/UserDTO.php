@@ -55,10 +55,11 @@ class UserDTO
      * @Serializer\Type("string")
      * @Serializer\Expose()
      * @Groups({"UserEdit", "UserAdd"})
-     * @Assert\NotNull(groups={"UserEdit", "UserAdd"})
-     * @Assert\Regex("/^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])(?=\S*[-_!@#$%^&*])\S*$/",
-     * message = "Password requirements(at least):length >8, 1 uppercase, 1 lowercase, 1 digit, 1 special",
-     * groups={"UserEdit", "UserAdd"}
+     * @Assert\NotNull(groups={"UserAdd"})
+     * @Assert\Regex(
+     *     "/^\S*(?=\S{8,})(?=\S*[a-z])(?=\S*[A-Z])(?=\S*[\d])(?=\S*[-_!@#$%^&*])\S*$/",
+     *     message = "Password requirements(at least):length >8, 1 uppercase, 1 lowercase, 1 digit, 1 special",
+     *     groups={"UserEdit", "UserAdd"}
      * )
      * @Serializer\SerializedName("newPassword")
      */

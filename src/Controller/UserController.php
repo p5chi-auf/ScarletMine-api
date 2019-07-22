@@ -29,8 +29,7 @@ class UserController extends AbstractController
     public function __construct(
         UserHandler $userHandler,
         SerializerInterface $serializer
-    )
-    {
+    ) {
         $this->serializer = $serializer;
         $this->userHandler = $userHandler;
     }
@@ -41,8 +40,7 @@ class UserController extends AbstractController
      */
     public function addUser(
         Request $request
-    )
-    {
+    ) {
         $data = $request->getContent();
 
         /** @var DeserializationContext $context */
@@ -59,6 +57,7 @@ class UserController extends AbstractController
         if ($errors->count()) {
             return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
+
         return new JsonResponse($user->getId());
     }
 
@@ -68,8 +67,7 @@ class UserController extends AbstractController
     public function editUser(
         Request $request,
         User $user
-    )
-    {
+    ) {
         $data = $request->getContent();
 
         /** @var DeserializationContext $context */
@@ -86,6 +84,7 @@ class UserController extends AbstractController
         if ($errors->count()) {
             return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
         }
+
         return new JsonResponse($user->getId());
     }
 

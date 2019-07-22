@@ -59,8 +59,7 @@ class UserHandler
         EntityManagerInterface $em,
         ValidatorInterface $validator,
         UserPasswordEncoderInterface $passwordEncoder
-    )
-    {
+    ) {
         $this->em = $em;
         $this->validator = $validator;
         $this->passwordEncoder = $passwordEncoder;
@@ -75,26 +74,36 @@ class UserHandler
         if ($user->getId() === null) {
             $user->setUsername($dto->username);
             $user->setPassword($dto->password);
-
         }
 
         $user->setfullName($dto->fullName);
         if (!empty($dto->password)) {
             $user->setPassword($this->passwordEncoder->encodePassword($user, $dto->password));
         }
+
         $userRolesErrors = $this->updateUserRoles($dto, $user);
         $userProjectRolesErrors = $this->updateUserProjectRole($dto, $user);
+
         $errors = $this->validator->validate($user);
+        $dtoErrors = $this->validator->validate($dto);
+
+        foreach ($dtoErrors as $error) {
+            $errors->add($error);
+        }
+
         foreach ($userRolesErrors as $error) {
             $errors->add($error);
         }
+
         foreach ($userProjectRolesErrors as $error) {
             $errors->add($error);
         }
+
         if ($errors->count() === 0) {
             $this->em->persist($user);
             $this->em->flush();
         }
+
         return $errors;
     }
 
@@ -115,6 +124,7 @@ class UserHandler
                 'roles' => $roles,
             ];
         }
+
         return $arr;
     }
 
@@ -138,6 +148,7 @@ class UserHandler
             }
             $user->addUserRole($roleEntity);
         }
+
         return $errors;
     }
 
@@ -183,6 +194,7 @@ class UserHandler
             $this->em->persist($userProjectRole);
             $user->addProjectRole($userProjectRole);
         }
+
         return $errors;
     }
 }
