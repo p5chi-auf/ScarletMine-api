@@ -12,6 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
  * @UniqueEntity("username")
+ * @UniqueEntity("email")
  */
 class User implements UserInterface
 {
@@ -30,6 +31,13 @@ class User implements UserInterface
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
     private $username;
+
+    /**
+     * @ORM\Column(name="email", type="string", length=255, unique=true)
+     * @Assert\Email
+     * @Assert\NotBlank
+     */
+    private $email;
 
     /**
      * @var string|null
@@ -87,6 +95,16 @@ class User implements UserInterface
         $this->username = $username;
 
         return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
     }
 
     public function getFullName(): ?string
