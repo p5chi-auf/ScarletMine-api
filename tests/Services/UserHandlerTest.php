@@ -22,19 +22,23 @@ class UserHandlerTest extends KernelTestCase
         $roleRepositoryMock = $this->createMock(ObjectRepository::class);
         $roleRepositoryMock
             ->method('find')
-            ->willReturnMap([
-                [1, new Role()],
-                [3, new Role()],
-                [2, null],
-            ]);
+            ->willReturnMap(
+                [
+                    [1, new Role()],
+                    [3, new Role()],
+                    [2, null],
+                ]
+            );
 
         $projectRepositoryMock = $this->createMock(ObjectRepository::class);
         $projectRepositoryMock
             ->method('find')
-            ->willReturnMap([
-                [1, new Project()],
-                [2, null],
-            ]);
+            ->willReturnMap(
+                [
+                    [1, new Project()],
+                    [2, null],
+                ]
+            );
 
         $userProjectRoleRepositoryMock = $this->createMock(ObjectRepository::class);
         $userProjectRoleRepositoryMock
@@ -44,21 +48,25 @@ class UserHandlerTest extends KernelTestCase
         $roleProjectRepositoryMock = $this->createMock(ObjectRepository::class);
         $roleProjectRepositoryMock
             ->method('find')
-            ->willReturnMap([
-                ['1', new RoleProject()],
-                ['2', null],
-            ]);
+            ->willReturnMap(
+                [
+                    ['1', new RoleProject()],
+                    ['2', null],
+                ]
+            );
 
         $emMock = $this->createMock(EntityManagerInterface::class);
         $emMock
             ->method('getRepository')
-            ->willReturnMap([
-                [Role::class, $roleRepositoryMock],
-                [RoleProject::class, $roleProjectRepositoryMock],
-                [User::class, $repositoryMock],
-                [Project::class, $projectRepositoryMock],
-                [UserProjectRole::class, $userProjectRoleRepositoryMock],
-            ]);
+            ->willReturnMap(
+                [
+                    [Role::class, $roleRepositoryMock],
+                    [RoleProject::class, $roleProjectRepositoryMock],
+                    [User::class, $repositoryMock],
+                    [Project::class, $projectRepositoryMock],
+                    [UserProjectRole::class, $userProjectRoleRepositoryMock],
+                ]
+            );
 
         return new UserHandler(
             $emMock,
@@ -73,14 +81,35 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = '';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
-        $this->assertCount(1, $result);
+        $this->assertCount(2, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
+    }
+
+    public function testValidateEmptyEmail(): void
+    {
+        $handler = $this->getHandler();
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = '';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
+
+        $this->assertCount(2, $result);
+        $this->assertEquals('email', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
     }
 
@@ -91,14 +120,54 @@ class UserHandlerTest extends KernelTestCase
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
         $dto->password = '';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
+
+        $this->assertCount(2, $result);
+        $this->assertEquals('password', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
+    }
+
+    public function testValidateEmptyConfirmPassword(): void
+    {
+        $handler = $this->getHandler();
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = '';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
         $this->assertCount(1, $result);
-        $this->assertEquals('password', $result->get(0)->getPropertyPath());
-        $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
+        $this->assertEquals('confirmPassword', $result->get(0)->getPropertyPath());
+        $this->assertEquals('Passwords do not match.', $result->get(0)->getMessage());
+    }
+
+    public function testValidateIncorrectConfirmPassword(): void
+    {
+        $handler = $this->getHandler();
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'ASDFGH123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('confirmPassword', $result->get(0)->getPropertyPath());
+        $this->assertEquals('Passwords do not match.', $result->get(0)->getMessage());
     }
 
     public function testValidateEmptyFullName(): void
@@ -107,13 +176,15 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = '';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
-        $this->assertCount(1, $result);
+        $this->assertCount(2, $result);
         $this->assertEquals('fullName', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
     }
@@ -124,7 +195,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [];
         $dto->projectRoles = ['1' => '1'];
 
@@ -141,7 +214,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1, 2];
         $dto->projectRoles = ['1' => '1'];
 
@@ -158,7 +233,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = [];
 
@@ -173,7 +250,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['1' => '2'];
 
@@ -190,7 +269,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['2' => '1'];
 
@@ -216,7 +297,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1];
         $dto->projectRoles = ['1' => '1'];
 
@@ -224,6 +307,34 @@ class UserHandlerTest extends KernelTestCase
 
         $this->assertCount(1, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());
+        $this->assertEquals('This value is already used.', $result->get(0)->getMessage());
+    }
+
+    public function testValidateNewExistingEmail(): void
+    {
+        $repositoryMock = $this->createMock(ObjectRepository::class);
+        $emMock = $this->createMock(EntityManagerInterface::class);
+        $repositoryMock
+            ->method('findOneBy')
+            ->willReturn(new User());
+        $emMock
+            ->method('getRepository')
+            ->willReturn($repositoryMock);
+
+        $handler = $this->getHandler();
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea@gmail.com';
+        $dto->role = [1];
+        $dto->projectRoles = ['1' => '1'];
+
+        $result = $handler->updateUser($dto, new User());
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('email', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value is already used.', $result->get(0)->getMessage());
     }
 
@@ -235,7 +346,9 @@ class UserHandlerTest extends KernelTestCase
         $dto = new UserDTO();
         $dto->username = 'iguidea20';
         $dto->fullName = 'Ion Guidea';
-        $dto->password = '1234';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
         $dto->role = [1, 3];
         $dto->projectRoles = ['1' => '1'];
 
@@ -249,14 +362,16 @@ class UserHandlerTest extends KernelTestCase
         $user1 = new User();
         $user1->getId();
         $user1->setUsername('username1');
-        $user1->setPassword('newPassword1');
+        $user1->setPassword('Asdfgh123456!@#$%^1');
         $user1->setFullName('fullName1');
+        $user1->setEmail('username1@gmail.com');
 
         $user2 = new User();
         $user2->getId();
         $user2->setUsername('username2');
-        $user2->setPassword('newPassword2');
+        $user2->setPassword('Asdfgh123456!@#$%^2');
         $user2->setFullName('fullName2');
+        $user2->setEmail('username2@gmail.com');
 
         $repositoryMock = $this->createMock(ObjectRepository::class);
         $emMock = $this->createMock(EntityManagerInterface::class);
@@ -267,7 +382,8 @@ class UserHandlerTest extends KernelTestCase
             ->method('getRepository')
             ->willReturn($repositoryMock);
 
-        $handler = new UserHandler($emMock,
+        $handler = new UserHandler(
+            $emMock,
             static::$container->get('validator'),
             static::$container->get('security.user_password_encoder.generic')
         );
@@ -277,17 +393,19 @@ class UserHandlerTest extends KernelTestCase
                 [
                     'id' => null,
                     'username' => 'username1',
-                    'newPassword' => 'newPassword1',
+                    'newPassword' => 'Asdfgh123456!@#$%^1',
                     'fullName' => 'fullName1',
+                    'email' => 'username1@gmail.com',
                     'roles' => [],
                 ],
                 [
                     'id' => null,
                     'username' => 'username2',
-                    'newPassword' => 'newPassword2',
+                    'newPassword' => 'Asdfgh123456!@#$%^2',
                     'fullName' => 'fullName2',
+                    'email' => 'username2@gmail.com',
                     'roles' => [],
-                ]
+                ],
             ],
             $result
         );

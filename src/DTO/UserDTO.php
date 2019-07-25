@@ -39,6 +39,21 @@ class UserDTO
     public $username;
 
     /**
+     * User email
+     * @var string
+     * @Serializer\Type("string")
+     * @Assert\NotBlank(groups={"UserAdd"})
+     * @Assert\Email(
+     *     message = "The email '{{ value }}' is not a valid email.",
+     *     groups={"UserAdd"}
+     * )
+     * @Serializer\Expose()
+     * @Groups({"UserAdd"})
+     * @Serializer\SerializedName("email")
+     */
+    public $email;
+
+    /**
      * The name of User
      * @var string
      * @Serializer\Type("string")
@@ -64,6 +79,21 @@ class UserDTO
      * @Serializer\SerializedName("newPassword")
      */
     public $password;
+
+    /**
+     * confirmPassword
+     * @var string
+     * @Serializer\Type("string")
+     * @Assert\NotNull(groups={"UserAdd"})
+     * @Assert\EqualTo(propertyPath="password",
+     *     message="Passwords do not match.",
+     *     groups={"UserEdit", "UserAdd"}
+     * )
+     * @Serializer\Expose()
+     * @Groups({"UserEdit", "UserAdd"})
+     * @Serializer\SerializedName("confirmPassword")
+     */
+    public $confirmPassword;
 
     /**
      * User Roles (Role Collection)

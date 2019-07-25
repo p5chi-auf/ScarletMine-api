@@ -73,7 +73,14 @@ class UserHandler
     {
         if ($user->getId() === null) {
             $user->setUsername($dto->username);
+            $user->setEmail($dto->email);
             $user->setPassword($dto->password);
+        }
+
+        if ($user->getId() === null) {
+            $group = 'UserAdd';
+        } else {
+            $group = 'UserEdit';
         }
 
         $user->setfullName($dto->fullName);
@@ -85,7 +92,7 @@ class UserHandler
         $userProjectRolesErrors = $this->updateUserProjectRole($dto, $user);
 
         $errors = $this->validator->validate($user);
-        $dtoErrors = $this->validator->validate($dto);
+        $dtoErrors = $this->validator->validate($dto, null, [$group]);
 
         foreach ($dtoErrors as $error) {
             $errors->add($error);
@@ -119,6 +126,7 @@ class UserHandler
             $arr[] = [
                 'id' => $user->getId(),
                 'username' => $user->getUsername(),
+                'email' => $user->getEmail(),
                 'fullName' => $user->getFullName(),
                 'newPassword' => $user->getPassword(),
                 'roles' => $roles,
