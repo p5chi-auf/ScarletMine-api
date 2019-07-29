@@ -78,14 +78,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyUsername(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
+        $dto = $this->getUserDTO();
         $dto->username = '';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -97,14 +91,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyEmail(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto = $this->getUserDTO();
         $dto->email = '';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -116,14 +104,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyNewPassword(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
+        $dto = $this->getUserDTO();
         $dto->password = '';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -135,14 +117,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyConfirmPassword(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto = $this->getUserDTO();
         $dto->confirmPassword = '';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -154,14 +130,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateIncorrectConfirmPassword(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto = $this->getUserDTO();
         $dto->confirmPassword = 'ASDFGH123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -173,14 +143,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyFullName(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
+        $dto = $this->getUserDTO();
         $dto->fullName = '';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -192,14 +156,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyRoles(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
+        $dto = $this->getUserDTO();
         $dto->role = [];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -211,14 +169,8 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidRole(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
+        $dto = $this->getUserDTO();
         $dto->role = [1, 2];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -230,13 +182,7 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEmptyUserProjectRoles(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
+        $dto = $this->getUserDTO();
         $dto->projectRoles = [];
 
         $result = $handler->updateUser($dto, new User());
@@ -247,13 +193,7 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidUserProjectRole(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
+        $dto = $this->getUserDTO();
         $dto->projectRoles = ['1' => '2'];
 
         $result = $handler->updateUser($dto, new User());
@@ -266,13 +206,7 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateInvalidUserProject(): void
     {
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
+        $dto = $this->getUserDTO();
         $dto->projectRoles = ['2' => '1'];
 
         $result = $handler->updateUser($dto, new User());
@@ -294,14 +228,8 @@ class UserHandlerTest extends KernelTestCase
             ->willReturn($repositoryMock);
 
         $handler = $this->getHandler();
-        $dto = new UserDTO();
+        $dto = $this->getUserDTO();
         $dto->username = 'iguidea';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -322,14 +250,8 @@ class UserHandlerTest extends KernelTestCase
             ->willReturn($repositoryMock);
 
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto = $this->getUserDTO();
         $dto->email = 'iguidea@gmail.com';
-        $dto->role = [1];
-        $dto->projectRoles = ['1' => '1'];
 
         $result = $handler->updateUser($dto, new User());
 
@@ -343,14 +265,7 @@ class UserHandlerTest extends KernelTestCase
         $user = new User();
 
         $handler = $this->getHandler();
-        $dto = new UserDTO();
-        $dto->username = 'iguidea20';
-        $dto->fullName = 'Ion Guidea';
-        $dto->password = 'Asdfgh123456!@#$%^';
-        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
-        $dto->email = 'iguidea1@gmail.com';
-        $dto->role = [1, 3];
-        $dto->projectRoles = ['1' => '1'];
+        $dto = $this->getUserDTO();
 
         $result = $handler->updateUser($dto, $user);
 
@@ -411,5 +326,22 @@ class UserHandlerTest extends KernelTestCase
         );
 
         $this->assertCount(2, $result);
+    }
+
+    /**
+     * @return UserDTO
+     */
+    private function getUserDTO(): UserDTO
+    {
+        $dto = new UserDTO();
+        $dto->username = 'iguidea20';
+        $dto->fullName = 'Ion Guidea';
+        $dto->password = 'Asdfgh123456!@#$%^';
+        $dto->confirmPassword = 'Asdfgh123456!@#$%^';
+        $dto->email = 'iguidea1@gmail.com';
+        $dto->role = [1, 3];
+        $dto->projectRoles = ['1' => '1'];
+
+        return $dto;
     }
 }
