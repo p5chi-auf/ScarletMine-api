@@ -71,6 +71,11 @@ class User implements UserInterface
      */
     private $projectRoles;
 
+    /**
+     * @ORM\OneToMany(targetEntity="Task", mappedBy="createdBy")
+     */
+    private $taskCreatedBy;
+
     public function __construct()
     {
         $this->userRoles = new ArrayCollection();
@@ -158,12 +163,10 @@ class User implements UserInterface
 
     public function getSalt()
     {
-        // TODO: Implement getSalt() method.
     }
 
     public function eraseCredentials()
     {
-        // TODO: Implement eraseCredentials() method.
     }
 
     /**
@@ -184,5 +187,10 @@ class User implements UserInterface
     public function clearProjectRole(): void
     {
         $this->projectRoles->clear();
+    }
+
+    public function getTaskCreatedBy()
+    {
+        return $this->taskCreatedBy;
     }
 }

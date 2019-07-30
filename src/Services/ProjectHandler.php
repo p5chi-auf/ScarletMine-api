@@ -20,9 +20,7 @@ class ProjectHandler
 
     public function updateProject(array $data, Project $project): ConstraintViolationListInterface
     {
-        if ($project->getId() === null) {
-            $project->setName(trim($data['name']));
-        }
+        $project->setName(trim($data['name']));
 
         $errors = $this->validator->validate($project);
 
@@ -34,25 +32,24 @@ class ProjectHandler
         return $errors;
     }
 
-        public function getList(): array
-        {
-            $repository = $this->em->getRepository(Project::class);
-            $projects = $repository->findAll();
-            $arr = [];
-            foreach ($projects as $proj) {
-                $arr [] = [
-                    'id' => $proj->getId(),
-                    'name' => $proj->getName(),
-                ];
-            }
-
-            return $arr;
+    public function getList(): array
+    {
+        $repository = $this->em->getRepository(Project::class);
+        $projects = $repository->findAll();
+        $arr = [];
+        foreach ($projects as $proj) {
+            $arr [] = [
+                'id' => $proj->getId(),
+                'name' => $proj->getName(),
+            ];
         }
 
-        public function delete(Project $project): void
-        {
-            $this->em->remove($project);
-            $this->em->flush();
-        }
+        return $arr;
+    }
 
+    public function delete(Project $project): void
+    {
+        $this->em->remove($project);
+        $this->em->flush();
+    }
 }

@@ -107,9 +107,7 @@ class ProjectHandlerTest extends KernelTestCase
 
     public function testSaveNullName(): void
     {
-        $emMock = $this->createMock(EntityManagerInterface::class);
-        $emMock
-            ->method('persist');
+
         $handler = $this->getHandler();
         $result = $handler->updateProject(['name' => null], new Project());
         $this->assertCount(1, $result);
