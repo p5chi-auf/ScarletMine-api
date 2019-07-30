@@ -44,6 +44,7 @@ class UserHandler
         $errors = $this->validator->validate($user);
         $user->clearUserRole();
 
+
         foreach ($data['roles'] as $id) {
             $repository = $this->em->getRepository(Role::class);
             $roleEntity = $repository->find($id);

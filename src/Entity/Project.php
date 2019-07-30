@@ -74,19 +74,21 @@ class Project
     /**
      * @return Collection|Task[]
      */
-    public function getComments(): Collection
+    public function getTask(): Collection
     {
         return $this->tasks;
     }
 
-    public function addComment(Task $tasks): self
+    public function addTask(Task $tasks): self
     {
         if (!$this->tasks->contains($tasks)) {
             $this->tasks[] = $tasks;
             $tasks->setProject($this);
         }
 
+        return $this;
     }
+
     public function removeTask(Task $tasks): self
     {
         if ($this->tasks->contains($tasks)) {
@@ -95,6 +97,7 @@ class Project
                 $tasks->setProject(null);
             }
         }
+
         return $this;
     }
 }

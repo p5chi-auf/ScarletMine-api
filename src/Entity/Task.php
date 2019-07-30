@@ -3,12 +3,17 @@
 
 namespace App\Entity;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TaskRepository")
  * @ORM\Table(name="tasks")
+ * @UniqueEntity("title")
  */
 class Task
 {
@@ -21,7 +26,7 @@ class Task
      *     inverseJoinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")}
      * )
      */
-    protected $users;
+    private $users;
 
     /**
      * @ORM\Id()
@@ -32,51 +37,62 @@ class Task
 
     /**
      * @var string
+     * @Assert\NotBlank
      * @ORM\Column(type="string", length=255)
      */
     private $title;
 
     /**
+     * @Assert\NotBlank()
      * @var string
      * @ORM\Column(type="string", length=255)
      */
     private $description;
 
     /**
-     * @var int
-     * @ORM\Column(type="string", length=255)
+     * @var Status
+     * @Assert\NotNull()
+     * @ORM\ManyToOne(targetEntity="Status")
+     * @ORM\JoinColumn(name="status_id", referencedColumnName="id", nullable=false)
      */
     private $status;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Project", inversedBy="task")
-     * @ORM\JoinColumn(nullable=false)
+     * @var Project
+     * @Assert\NotNull()
+     * @ORM\ManyToOne(targetEntity="Project")
+     * @ORM\JoinColumn(name="project_id", referencedColumnName="id", nullable=false)
      */
     private $project;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime")
      */
     private $createdAt;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime")
      */
     private $updatedAt;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="createdBy_id", referencedColumnName="id", nullable=false)
      */
     private $createdBy;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var User
+     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\JoinColumn(name="updatedBy_id", referencedColumnName="id",nullable=true)
      */
     private $updatedBy;
 
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->createdAt = new DateTime();
+        $this->updatedAt = new DateTime();
     }
 
     public function getId(): ?int
@@ -100,7 +116,6 @@ class Task
     {
         return $this->description;
     }
-
 
     public function setDescription(string $description): self
     {
@@ -132,16 +147,6 @@ class Task
         $this->users->clear();
     }
 
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(int $status): void
-    {
-        $this->status = $status;
-    }
-
     public function getProject(): ?Project
     {
         return $this->project;
@@ -154,45 +159,60 @@ class Task
         return $this;
     }
 
-    public function getCreatedAt()
+    public function getCreatedAt(): ?DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt($createdAt): void
+    public function setCreatedAt(DateTimeInterface $createdAt): void
     {
         $this->createdAt = $createdAt;
     }
 
-    public function getUpdatedAt()
+    public function getUpdatedAt(): ?DateTimeInterface
     {
         return $this->updatedAt;
     }
 
-    public function setUpdateAt($updatedAt): void
+    public function setUpdatedAt(DateTimeInterface $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
     }
 
-    public function getCreatedBy()
+    public function getCreatedBy(): ?User
     {
         return $this->createdBy;
     }
 
-    public function setCreatedBy($createdBy): void
+    public function setCreatedBy(User $createdBy): void
     {
         $this->createdBy = $createdBy;
     }
 
-    public function getUpdatedBy()
+    public function getUpdatedBy(): ?User
     {
         return $this->updatedBy;
     }
 
-    public function setUpdatedBy($updatedBy): void
+    public function setUpdatedBy(User $updatedBy): void
     {
         $this->updatedBy = $updatedBy;
     }
 
+    public function getStatus(): ?Status
+    {
+        return $this->status;
+    }
 
+    public function setStatus(Status $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function clearUsersTask(): void
+    {
+        $this->users->clear();
+    }
 }
