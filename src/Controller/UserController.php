@@ -27,19 +27,27 @@ class UserController extends AbstractController
      */
     private $userHandler;
 
+    /**
+     * @var ValidationErrorSerializer
+     */
+    private $validationErrorSerializer;
+
     public function __construct(
         UserHandler $userHandler,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        ValidationErrorSerializer $validationErrorSerializer
+
     ) {
         $this->serializer = $serializer;
         $this->userHandler = $userHandler;
+        $this->validationErrorSerializer = $validationErrorSerializer;
     }
 
     /**
      * @Route("/api/user-register", name="user_register", methods={"POST"})
      * @Route("/api/users", name="user_add", methods={"POST"})
      */
-    public function addUser(Request $request, ValidationErrorSerializer $validationErrorSerializer): JsonResponse
+    public function addUser(Request $request): JsonResponse
     {
         $data = $request->getContent();
 
@@ -59,7 +67,7 @@ class UserController extends AbstractController
                 [
                     'code' => Response::HTTP_BAD_REQUEST,
                     'message' => 'Bad Request',
-                    'errors' => $validationErrorSerializer->serialize($errors),
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
                 ],
                 Response::HTTP_BAD_REQUEST
             );
@@ -71,11 +79,8 @@ class UserController extends AbstractController
     /**
      * @Route("/api/users/{user}", name="user_edit", methods={"POST"})
      */
-    public function editUser(
-        Request $request,
-        User $user,
-        ValidationErrorSerializer $validationErrorSerializer
-    ): JsonResponse {
+    public function editUser(Request $request, User $user): JsonResponse
+    {
         $data = $request->getContent();
 
         /** @var DeserializationContext $context */
@@ -94,7 +99,7 @@ class UserController extends AbstractController
                 [
                     'code' => Response::HTTP_BAD_REQUEST,
                     'message' => 'Bad Request',
-                    'errors' => $validationErrorSerializer->serialize($errors),
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
                 ],
                 Response::HTTP_BAD_REQUEST
             );
