@@ -12,6 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  * @ORM\Table(name="users")
  * @UniqueEntity("username")
+ * @UniqueEntity("email")
  */
 class User implements UserInterface
 {
@@ -24,18 +25,23 @@ class User implements UserInterface
 
     /**
      * @var string
-     * @Assert\NotBlank(groups={"Registration","Profile"})
-     * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/", groups={"Registration","Profile"})
-     *
+     * @Assert\NotBlank
+     * @Assert\Regex(pattern="/^[a-zA-Z0-9_]+$/")
      * @ORM\Column(type="string", length=255)
      * @ORM\OneToMany(targetEntity="UserProjectRole", mappedBy="user")
      */
     private $username;
 
     /**
-     * @var string
+     * @ORM\Column(name="email", type="string", length=255, unique=true)
+     * @Assert\Email
      * @Assert\NotBlank
-     *
+     */
+    private $email;
+
+    /**
+     * @var string|null
+     * @Assert\NotBlank
      * @ORM\Column(type="string", length=255)
      */
     private $fullName;
@@ -43,13 +49,13 @@ class User implements UserInterface
     /**
      * @var string|null
      * @Assert\NotBlank
-     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $password;
 
     /**
      * @var ArrayCollection|Role[]
+     * @Assert\Count(min=1)
      * @ORM\ManyToMany(targetEntity="Role")
      * @ORM\JoinTable(
      *     name="users_roles",
@@ -86,11 +92,24 @@ class User implements UserInterface
         return $this->username;
     }
 
+    /**
+     * @return string|null
+     */
     public function setUsername(string $username): self
     {
         $this->username = $username;
 
         return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
     }
 
     public function getFullName(): ?string
@@ -117,7 +136,7 @@ class User implements UserInterface
         return $this;
     }
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return [];
     }
