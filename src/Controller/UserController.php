@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Serializer\ValidationErrorSerializer;
 
 class UserController extends AbstractController
 
@@ -26,21 +27,28 @@ class UserController extends AbstractController
      */
     private $userHandler;
 
+    /**
+     * @var ValidationErrorSerializer
+     */
+    private $validationErrorSerializer;
+
     public function __construct(
         UserHandler $userHandler,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        ValidationErrorSerializer $validationErrorSerializer
+
     ) {
         $this->serializer = $serializer;
         $this->userHandler = $userHandler;
+        $this->validationErrorSerializer = $validationErrorSerializer;
     }
 
     /**
      * @Route("/api/user-register", name="user_register", methods={"POST"})
      * @Route("/api/users", name="user_add", methods={"POST"})
      */
-    public function addUser(
-        Request $request
-    ) {
+    public function addUser(Request $request): JsonResponse
+    {
         $data = $request->getContent();
 
         /** @var DeserializationContext $context */
@@ -55,7 +63,14 @@ class UserController extends AbstractController
         $user = new User();
         $errors = $this->userHandler->updateUser($addUserDTO, $user);
         if ($errors->count()) {
-            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request',
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         return new JsonResponse($user->getId());
@@ -64,10 +79,8 @@ class UserController extends AbstractController
     /**
      * @Route("/api/users/{user}", name="user_edit", methods={"POST"})
      */
-    public function editUser(
-        Request $request,
-        User $user
-    ) {
+    public function editUser(Request $request, User $user): JsonResponse
+    {
         $data = $request->getContent();
 
         /** @var DeserializationContext $context */
@@ -82,7 +95,14 @@ class UserController extends AbstractController
 
         $errors = $this->userHandler->updateUser($editUserDTO, $user);
         if ($errors->count()) {
-            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request',
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         return new JsonResponse($user->getId());
