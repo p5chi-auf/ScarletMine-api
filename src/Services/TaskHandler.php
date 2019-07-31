@@ -3,6 +3,7 @@
 
 namespace App\Services;
 
+use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
 use App\Entity\Task;
@@ -50,37 +51,17 @@ class TaskHandler
         $this->security = $security;
     }
 
-    public function updateTask(array $data, Task $task): ConstraintViolationListInterface
+    public function updateTask(TaskDTO $dto, Task $task): ConstraintViolationListInterface
     {
-        $task->setTitle(trim($data['title']));
-        $task->setDescription($data['description']);
+        $task->setTitle($dto->title);
+        $task->setDescription($dto->description);
         $task->setCreatedBy($this->security->getUser());
         $task->setCreatedAt(new \DateTime());
         $task->setUpdatedAt(new \DateTime());
 
-        $relationErrors = [];
+        $relationErrors = $this->updateUsersTask($dto, $task);
 
-        $task->clearUsersTask();
-
-        foreach ($data['users'] as $userId) {
-            $userEntity = $this->userRepository->find($userId);
-
-            if (!$userEntity) {
-                $relationErrors[] =
-                    new ConstraintViolation(
-                        \sprintf('User %s not found', $userId),
-                        '',
-                        [],
-                        $userId,
-                        'user',
-                        $userId
-                    );
-                continue;
-            }
-            $task->addUser($userEntity);
-        }
-
-        $project = $this->projectRepository->find($data['project']);
+        $project = $this->projectRepository->find($dto->project);
         if (!$project) {
             $relationErrors[] =
                 new ConstraintViolation(
@@ -95,7 +76,7 @@ class TaskHandler
             $task->setProject($project);
         }
 
-        $status = $this->statusRepository->find($data['status']);
+        $status = $this->statusRepository->find($dto->status);
         if (!$status) {
             $relationErrors[] =
                 new ConstraintViolation(
@@ -123,4 +104,31 @@ class TaskHandler
 
         return $errors;
     }
+
+    public function updateUsersTask(TaskDTO $dto, Task $task): array
+    {
+        $relationErrors = [];
+        $task->clearUsersTask();
+
+        foreach ($dto->users as $userId) {
+            $userEntity = $this->userRepository->find($userId);
+
+            if (!$userEntity) {
+                $relationErrors[] =
+                    new ConstraintViolation(
+                        \sprintf('User %s not found', $userId),
+                        '',
+                        [],
+                        $userId,
+                        'users',
+                        $userId
+                    );
+                continue;
+            }
+            $task->addUser($userEntity);
+        }
+
+        return $relationErrors;
+    }
+
 }

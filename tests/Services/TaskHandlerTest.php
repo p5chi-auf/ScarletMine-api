@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
+use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
 use App\Entity\Task;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\Common\Persistence\ObjectRepository;
 
@@ -21,16 +22,9 @@ class TaskHandlerTest extends KernelTestCase
     public function testValidateEmptyTitle(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateTask(
-            [
-                'title' => '',
-                'description' => 'blla',
-                'status' => 1,
-                'users' => [],
-                'project' => 3,
-            ],
-            new Task()
-        );
+        $dto = $this->getTaskDTO();
+        $dto->title = '';
+        $result = $handler->updateTask($dto, new Task());
         $this->assertCount(1, $result);
         $this->assertEquals('title', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
@@ -70,44 +64,40 @@ class TaskHandlerTest extends KernelTestCase
                     [Status::class, $statusRepositoryMock],
                 ]
             );
-        $securityMock = $this->createMock(\Symfony\Component\Security\Core\Security::class);
+        $securityMock = $this->createMock(Security::class);
         $securityMock->method('getUser')->willReturn(new User());
 
         return new TaskHandler($emMock, static::$container->get('validator'), $securityMock);
     }
 
+    private function getTaskDTO(): TaskDTO
+    {
+        $dto = new TaskDTO();
+        $dto->title = 'title';
+        $dto->description = 'describe';
+        $dto->status = 1;
+        $dto->users = [1];
+        $dto->project = 2;
+        $dto->createdBy = 1;
+
+        return $dto;
+    }
 
     public function testValidateOK(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateTask(
-            [
-                'title' => 'title',
-                'description' => 'description',
-                'status' => 1,
-                'users' => [],
-                'project' => 1,
-                'createdBy' => 1,
-            ],
-            new Task()
-        );
+        $dto = $this->getTaskDTO();
+        $result = $handler->updateTask($dto, new Task());
         $this->assertCount(0, $result);
     }
 
     public function testValidateStatusInvalid(): void
     {
         $handler = $this->getHandler();
-        $result = $handler->updateTask(
-            [
-                'title' => 'title',
-                'description' => 'description',
-                'status' => 2,
-                'users' => [],
-                'project' => 1,
-                'createdBy' => 1,
-            ],
-            new Task()
-        );
+        $dto = $this->getTaskDTO();
+        $dto->status = 2;
+        $result = $handler->updateTask($dto, new Task());
+
         $this->assertCount(2, $result);
         $this->assertEquals('status', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be null.', $result->get(0)->getMessage());

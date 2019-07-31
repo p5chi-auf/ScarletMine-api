@@ -43,7 +43,6 @@ class Task
     private $title;
 
     /**
-     * @Assert\NotBlank()
      * @var string
      * @ORM\Column(type="string", length=255)
      */
