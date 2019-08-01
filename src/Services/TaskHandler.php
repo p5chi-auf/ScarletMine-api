@@ -131,4 +131,25 @@ class TaskHandler
         return $relationErrors;
     }
 
+
+    public function getList(Task $task): array
+    {
+        $users = [];
+        $listUser = [];
+        foreach ($task->getUsers() as $user) {
+            $users['id'] = $user->getId();
+            $users['username'] = $user->getUsername();
+            $users['FullName'] = $user->getFullName();
+            $users['email'] = $user->getEmail();
+            $listUser[][] = $users;
+        }
+        $arr[] = [
+            'id' => $task->getId(),
+            'description' => $task->getDescription(),
+            'status' => $task->getStatus()->getId(),
+            'users' => $listUser,
+        ];
+
+        return $arr;
+    }
 }

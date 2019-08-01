@@ -15,7 +15,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Serializer\ValidationErrorSerializer;
 
 class UserController extends AbstractController
-
 {
     /**
      * @var SerializerInterface
@@ -36,7 +35,6 @@ class UserController extends AbstractController
         UserHandler $userHandler,
         SerializerInterface $serializer,
         ValidationErrorSerializer $validationErrorSerializer
-
     ) {
         $this->serializer = $serializer;
         $this->userHandler = $userHandler;
