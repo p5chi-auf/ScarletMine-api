@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTO\UserDTO;
+use App\Transformer\UserTransformer;
 use App\Entity\RoleProject;
 use App\Entity\User;
 use App\Entity\UserProjectRole;
@@ -13,7 +14,6 @@ use App\Repository\RoleProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\UserRepository;
 use App\Repository\RoleRepository;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -46,47 +46,38 @@ class UserHandler
     private $roleProjectRepository;
 
     /**
-     * @var UserPasswordEncoderInterface
-     */
-    private $passwordEncoder;
-
-    /**
      * @var EntityManagerInterface
      */
     private $em;
 
+    /**
+     * @var UserTransformer
+     */
+    private $transformer;
+
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        UserPasswordEncoderInterface $passwordEncoder
+        UserTransformer $transformer
     ) {
         $this->em = $em;
         $this->validator = $validator;
-        $this->passwordEncoder = $passwordEncoder;
+        $this->transformer = $transformer;
         $this->userRepository = $this->em->getRepository(User::class);
         $this->roleRepository = $this->em->getRepository(Role::class);
         $this->projectRepository = $this->em->getRepository(Project::class);
         $this->roleProjectRepository = $this->em->getRepository(RoleProject::class);
     }
 
-    public function updateUser(UserDTO $dto, User $user): ConstraintViolationListInterface
+    public function updateUser(UserDTO $dto, ?User $user = null): ConstraintViolationListInterface
     {
-        if ($user->getId() === null) {
-            $user->setUsername($dto->username);
-            $user->setEmail($dto->email);
-            $user->setPassword($dto->password);
-        }
-
-        if ($user->getId() === null) {
+        if ($user === null) {
             $group = 'UserAdd';
         } else {
             $group = 'UserEdit';
         }
 
-        $user->setfullName($dto->fullName);
-        if (!empty($dto->password)) {
-            $user->setPassword($this->passwordEncoder->encodePassword($user, $dto->password));
-        }
+        $user = $this->transformer->transformDTOToEntity($dto, $user);
 
         $userRolesErrors = $this->updateUserRoles($dto, $user);
         $userProjectRolesErrors = $this->updateUserProjectRole($dto, $user);
@@ -119,18 +110,8 @@ class UserHandler
         $users = $this->userRepository->findAll();
         $arr = [];
         foreach ($users as $user) {
-            $roles = [];
-            foreach ($user->getUserRoles() as $role) {
-                $roles[] = $role->getRole();
-            }
-            $arr[] = [
-                'id' => $user->getId(),
-                'username' => $user->getUsername(),
-                'email' => $user->getEmail(),
-                'fullName' => $user->getFullName(),
-                'newPassword' => $user->getPassword(),
-                'roles' => $roles,
-            ];
+            $userDTO = $this->transformer->transformEntityToDTO($user);
+            $arr[] = $userDTO;
         }
 
         return $arr;
@@ -163,7 +144,7 @@ class UserHandler
     public function updateUserProjectRole(UserDTO $dto, User $user): array
     {
         $errors = [];
-        foreach ($user->getProjectRole() as $role) {
+        foreach ($user->getProjectRoles() as $role) {
             $this->em->remove($role);
         }
         $user->clearProjectRole();
