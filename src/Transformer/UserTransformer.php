@@ -24,7 +24,7 @@ class UserTransformer
             $user = new User();
             $user->setUsername($dto->username);
             $user->setEmail($dto->email);
-            $user->setPassword($dto->password);
+            $user->setPassword($this->passwordEncoder->encodePassword($user, $dto->password));
         }
 
         $user->setfullName($dto->fullName);
