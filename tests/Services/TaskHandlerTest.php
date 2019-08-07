@@ -7,6 +7,7 @@ use App\Entity\Project;
 use App\Entity\Status;
 use App\Entity\Task;
 use App\Entity\User;
+use App\Transformer\UserTransformer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -67,7 +68,12 @@ class TaskHandlerTest extends KernelTestCase
         $securityMock = $this->createMock(Security::class);
         $securityMock->method('getUser')->willReturn(new User());
 
-        return new TaskHandler($emMock, static::$container->get('validator'), $securityMock);
+        return new TaskHandler(
+            $emMock,
+            static::$container->get('validator'),
+            $securityMock,
+            static::$container->get(UserTransformer::class)
+        );
     }
 
     private function getTaskDTO(): TaskDTO
@@ -102,4 +108,5 @@ class TaskHandlerTest extends KernelTestCase
         $this->assertEquals('status', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be null.', $result->get(0)->getMessage());
     }
+
 }

@@ -172,7 +172,7 @@ class User implements UserInterface
     /**
      * @return UserProjectRole[]|ArrayCollection
      */
-    public function getProjectRole()
+    public function getProjectRoles()
     {
         return $this->projectRoles;
     }

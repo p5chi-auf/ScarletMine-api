@@ -3,6 +3,7 @@
 
 namespace App\Services;
 
+use App\Transformer\UserTransformer;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
@@ -41,7 +42,8 @@ class TaskHandler
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        Security $security
+        Security $security,
+        UserTransformer $transformer
     ) {
         $this->em = $em;
         $this->userRepository = $em->getRepository(User::class);
@@ -49,6 +51,7 @@ class TaskHandler
         $this->statusRepository = $em->getRepository(Status::class);
         $this->validator = $validator;
         $this->security = $security;
+        $this->transformer = $transformer;
     }
 
     public function updateTask(TaskDTO $dto, Task $task): ConstraintViolationListInterface
@@ -129,6 +132,25 @@ class TaskHandler
         }
 
         return $relationErrors;
+    }
+
+
+    public function getList(Task $task): array
+    {
+        $listUsers = [];
+        foreach ($task->getUsers() as $user) {
+            $userDTO = $this->transformer->transformEntityToDTO($user);
+            $listUsers[] = $userDTO;
+        }
+        $arr[] = [
+            'id' => $task->getId(),
+            'title' => $task->getTitle(),
+            'description' => $task->getDescription(),
+            'status' => $task->getStatus()->getId(),
+            'users' => $listUsers,
+        ];
+
+        return $arr;
     }
 
 }

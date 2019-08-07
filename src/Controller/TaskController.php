@@ -74,5 +74,16 @@ class TaskController extends AbstractController
         return new JsonResponse($task->getId());
     }
 
+
+    /**
+     * @Route("/api/task/{task}", name="Task_List", methods={"Get"})
+     */
+    public function listUser(Task $task): JsonResponse
+    {
+        $list = $this->handler->getList($task);
+
+        return new JsonResponse($list);
+    }
+
 }
 

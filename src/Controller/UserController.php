@@ -15,7 +15,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Serializer\ValidationErrorSerializer;
 
 class UserController extends AbstractController
-
 {
     /**
      * @var SerializerInterface
@@ -36,7 +35,6 @@ class UserController extends AbstractController
         UserHandler $userHandler,
         SerializerInterface $serializer,
         ValidationErrorSerializer $validationErrorSerializer
-
     ) {
         $this->serializer = $serializer;
         $this->userHandler = $userHandler;
@@ -60,8 +58,8 @@ class UserController extends AbstractController
             'json',
             $context
         );
-        $user = new User();
-        $errors = $this->userHandler->updateUser($addUserDTO, $user);
+
+        $errors = $this->userHandler->updateUser($addUserDTO);
         if ($errors->count()) {
             return new JsonResponse(
                 [
@@ -73,7 +71,7 @@ class UserController extends AbstractController
             );
         }
 
-        return new JsonResponse($user->getId());
+        return new JsonResponse(['message' => 'User added successfully'], Response::HTTP_OK);
     }
 
     /**
@@ -105,7 +103,7 @@ class UserController extends AbstractController
             );
         }
 
-        return new JsonResponse($user->getId());
+        return new JsonResponse(['message' => 'User successfully edited!'], Response::HTTP_OK);
     }
 
     /**

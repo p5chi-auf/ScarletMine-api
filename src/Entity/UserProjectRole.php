@@ -50,7 +50,7 @@ class UserProjectRole
         $this->user = $user;
     }
 
-    public function getProjectRole()
+    public function getProjectRole(): ?RoleProject
     {
         return $this->projectRole;
     }
@@ -60,7 +60,7 @@ class UserProjectRole
         $this->projectRole = $role;
     }
 
-    public function getProject()
+    public function getProject(): ?Project
     {
         return $this->project;
     }
