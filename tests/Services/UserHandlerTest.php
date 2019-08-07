@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\DTO\UserDTO;
 use App\Services\UserHandler;
+use App\Transformer\UserTransformer;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -71,7 +72,7 @@ class UserHandlerTest extends KernelTestCase
         return new UserHandler(
             $emMock,
             static::$container->get('validator'),
-            static::$container->get('security.user_password_encoder.generic')
+            static::$container->get(UserTransformer::class)
         );
     }
 
@@ -94,7 +95,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->email = '';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(2, $result);
         $this->assertEquals('email', $result->get(0)->getPropertyPath());
@@ -107,7 +108,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->password = '';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(2, $result);
         $this->assertEquals('password', $result->get(0)->getPropertyPath());
@@ -120,7 +121,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->confirmPassword = '';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('confirmPassword', $result->get(0)->getPropertyPath());
@@ -133,7 +134,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->confirmPassword = 'ASDFGH123456!@#$%^';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('confirmPassword', $result->get(0)->getPropertyPath());
@@ -146,7 +147,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->fullName = '';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(2, $result);
         $this->assertEquals('fullName', $result->get(0)->getPropertyPath());
@@ -159,7 +160,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->role = [];
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('userRoles', $result->get(0)->getPropertyPath());
@@ -172,7 +173,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->role = [1, 2];
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('userRoles', $result->get(0)->getPropertyPath());
@@ -185,7 +186,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->projectRoles = [];
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(0, $result);
     }
@@ -196,7 +197,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->projectRoles = ['1' => '2'];
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('projectRoles', $result->get(0)->getPropertyPath());
@@ -209,7 +210,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->projectRoles = ['2' => '1'];
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('projectRoles', $result->get(0)->getPropertyPath());
@@ -231,7 +232,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->username = 'iguidea';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());
@@ -253,7 +254,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->email = 'iguidea@gmail.com';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(1, $result);
         $this->assertEquals('email', $result->get(0)->getPropertyPath());
@@ -263,30 +264,31 @@ class UserHandlerTest extends KernelTestCase
     public function testValidateEditOk(): void
     {
         $user = new User();
+        $user->setUsername('iguidea20');
+        $user->setEmail('iguidea20@gmail.com');
 
         $handler = $this->getHandler();
         $dto = $this->getUserDTO();
 
         $result = $handler->updateUser($dto, $user);
-
         $this->assertCount(0, $result);
     }
 
     public function testGetListUser(): void
     {
         $user1 = new User();
-        $user1->getId();
-        $user1->setUsername('username1');
-        $user1->setPassword('Asdfgh123456!@#$%^1');
-        $user1->setFullName('fullName1');
-        $user1->setEmail('username1@gmail.com');
+        $user1->setUsername('egavrisco');
+        $user1->setFullName('Elena Gavrisco');
+        $user1->setPassword('Asdfgh123456!@#$%^');
+        $user1->setEmail('egavrisco@gmail.com');
+//        $user1->addUserRole(1, 3);
+//        $user1->addUserRole(['1' => '1']);
 
         $user2 = new User();
-        $user2->getId();
-        $user2->setUsername('username2');
-        $user2->setPassword('Asdfgh123456!@#$%^2');
-        $user2->setFullName('fullName2');
-        $user2->setEmail('username2@gmail.com');
+        $user2->setUsername('iguidea20');
+        $user2->setFullName('Ion Guidea');
+        $user2->setPassword('Asdfgh123456!@#$%^');
+        $user2->setEmail('iguidea1@gmail.com');
 
         $repositoryMock = $this->createMock(ObjectRepository::class);
         $emMock = $this->createMock(EntityManagerInterface::class);
@@ -300,32 +302,30 @@ class UserHandlerTest extends KernelTestCase
         $handler = new UserHandler(
             $emMock,
             static::$container->get('validator'),
-            static::$container->get('security.user_password_encoder.generic')
+            static::$container->get(UserTransformer::class)
         );
         $result = $handler->getList();
-        $this->assertEquals(
-            [
-                [
-                    'id' => null,
-                    'username' => 'username1',
-                    'newPassword' => 'Asdfgh123456!@#$%^1',
-                    'fullName' => 'fullName1',
-                    'email' => 'username1@gmail.com',
-                    'roles' => [],
-                ],
-                [
-                    'id' => null,
-                    'username' => 'username2',
-                    'newPassword' => 'Asdfgh123456!@#$%^2',
-                    'fullName' => 'fullName2',
-                    'email' => 'username2@gmail.com',
-                    'roles' => [],
-                ],
-            ],
-            $result
-        );
+
+        $dto1 = new UserDTO();
+        $dto1->username = 'egavrisco';
+        $dto1->fullName = 'Elena Gavrisco';
+        $dto1->password = null;
+        $dto1->email = 'egavrisco@gmail.com';
+        $dto1->role = [];
+        $dto1->projectRoles = [];
+        $arr[] = $dto1;
+
+        $dto2 = new UserDTO();
+        $dto2->username = 'iguidea20';
+        $dto2->fullName = 'Ion Guidea';
+        $dto2->password = null;
+        $dto2->email = 'iguidea1@gmail.com';
+        $dto2->role = [];
+        $dto2->projectRoles = [];
+        $arr[] = $dto2;
 
         $this->assertCount(2, $result);
+        $this->assertEquals($arr, $result);
     }
 
     /**

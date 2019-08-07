@@ -44,8 +44,6 @@ class UserTransformer
 
         $projectRoles = [];
         foreach ($user->getProjectRoles() as $userProjectRole) {
-//            $projectRoles[] = $userProjectRole->getName();
-
             $projectRoles[] = [
                 'projectID' => $userProjectRole->getProject()->getId(),
                 'roleID' => $userProjectRole->getProjectRole()->getId(),
