@@ -82,7 +82,7 @@ class UserHandlerTest extends KernelTestCase
         $dto = $this->getUserDTO();
         $dto->username = '';
 
-        $result = $handler->updateUser($dto, new User());
+        $result = $handler->updateUser($dto);
 
         $this->assertCount(2, $result);
         $this->assertEquals('username', $result->get(0)->getPropertyPath());

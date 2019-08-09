@@ -5,11 +5,10 @@ namespace App\Services;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
-use App\Entity\Task;
 use App\Entity\User;
+use App\Transformer\TaskTransformer;
 use App\Transformer\UserTransformer;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\Common\Persistence\ObjectRepository;
 
@@ -25,7 +24,7 @@ class TaskHandlerTest extends KernelTestCase
         $handler = $this->getHandler();
         $dto = $this->getTaskDTO();
         $dto->title = '';
-        $result = $handler->updateTask($dto, new Task());
+        $result = $handler->updateTask($dto);
         $this->assertCount(1, $result);
         $this->assertEquals('title', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
@@ -65,14 +64,12 @@ class TaskHandlerTest extends KernelTestCase
                     [Status::class, $statusRepositoryMock],
                 ]
             );
-        $securityMock = $this->createMock(Security::class);
-        $securityMock->method('getUser')->willReturn(new User());
 
         return new TaskHandler(
             $emMock,
             static::$container->get('validator'),
-            $securityMock,
-            static::$container->get(UserTransformer::class)
+            static::$container->get(UserTransformer::class),
+            static::$container->get(TaskTransformer::class)
         );
     }
 
@@ -93,7 +90,7 @@ class TaskHandlerTest extends KernelTestCase
     {
         $handler = $this->getHandler();
         $dto = $this->getTaskDTO();
-        $result = $handler->updateTask($dto, new Task());
+        $result = $handler->updateTask($dto);
         $this->assertCount(0, $result);
     }
 
@@ -102,7 +99,7 @@ class TaskHandlerTest extends KernelTestCase
         $handler = $this->getHandler();
         $dto = $this->getTaskDTO();
         $dto->status = 2;
-        $result = $handler->updateTask($dto, new Task());
+        $result = $handler->updateTask($dto);
 
         $this->assertCount(2, $result);
         $this->assertEquals('status', $result->get(0)->getPropertyPath());

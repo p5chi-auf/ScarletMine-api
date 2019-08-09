@@ -11,11 +11,11 @@ class TaskDTO
     /**
      * Users
      * @var array
-     * @Assert\NotBlank(groups={"TaskAdd"})
+     * @Assert\NotBlank(groups={"TaskAdd","TaskEdit"})
      * @Serializer\Type("array")
      * @Serializer\Expose()
      * @Serializer\SerializedName("users")
-     * @Groups({"TaskAdd"})
+     * @Groups({"TaskAdd","TaskEdit"})
      */
     public $users;
 
@@ -32,16 +32,16 @@ class TaskDTO
      * The title for Task
      * @var string
      * @Serializer\Type("string")
-     * @Assert\NotBlank(groups={"TaskAdd"})
+     * @Assert\NotBlank(groups={"TaskAdd","TaskEdit"})
      * @Assert\Length(
      *      min = 4,
      *      max = 50,
      *      minMessage = "Your title must be at least 4 characters long",
      *      maxMessage = "Your title cannot be longer than 50 characters",
-     *     groups={"TaskAdd"}
+     *     groups={"TaskAdd","TaskEdit"}
      * )
      * @Serializer\Expose()
-     * @Groups({"TaskAdd"})
+     * @Groups({"TaskAdd","TaskEdit"})
      * @Serializer\SerializedName("title")
      */
     public $title;
@@ -51,7 +51,7 @@ class TaskDTO
      * @var string
      * @Serializer\Type("string")
      * @Serializer\Expose()
-     * @Groups({"TaskAdd"})
+     * @Groups({"TaskAdd","TaskEdit"})
      * @Serializer\SerializedName("description")
      */
     public $description;
@@ -59,22 +59,22 @@ class TaskDTO
     /**
      * Task status
      * @var integer
-     * @Assert\NotNull(groups={"TaskAdd"})
+     * @Assert\NotNull(groups={"TaskAdd","TaskEdit"})
      * @Serializer\Type("integer")
      * @Serializer\Expose()
      * @Serializer\SerializedName("status")
-     * @Groups({"TaskAdd"})
+     * @Groups({"TaskAdd","TaskEdit"})
      */
     public $status;
 
     /**
      * Project Task
      * @var integer
-     * @Assert\NotNull(groups={"TaskAdd"})
+     * @Assert\NotNull(groups={"TaskAdd","TaskEdit"})
      * @Serializer\Type("integer")
      * @Serializer\Expose()
      * @Serializer\SerializedName("project")
-     * @Groups({"TaskAdd"})
+     * @Groups({"TaskAdd","TaskEdit"})
      */
     public $project;
 

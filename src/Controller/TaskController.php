@@ -58,8 +58,7 @@ class TaskController extends AbstractController
             $context
         );
 
-        $task = new Task();
-        $errors = $this->handler->updateTask($addTaskDTO, $task);
+        $errors = $this->handler->updateTask($addTaskDTO);
         if ($errors->count()) {
             return new JsonResponse(
                 [
@@ -71,9 +70,40 @@ class TaskController extends AbstractController
             );
         }
 
-        return new JsonResponse($task->getId());
+        return new JsonResponse(['message' => 'Task added successfully'], Response::HTTP_OK);
     }
 
+    /**
+     * @Route("/api/task/{task}", name="task_edit", methods={"POST"})
+     */
+    public function editTask(Request $request, Task $task): JsonResponse
+    {
+        $data = $request->getContent();
+
+        /** @var DeserializationContext $context */
+        $context = DeserializationContext::create()->setGroups(['TaskEdit']);
+
+        $editTaskDTO = $this->serializer->deserialize(
+            $data,
+            TaskDTO::class,
+            'json',
+            $context
+        );
+
+        $errors = $this->handler->updateTask($editTaskDTO, $task);
+        if ($errors->count()) {
+            return new JsonResponse(
+                [
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request',
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return new JsonResponse(['message' => 'Task successfully edited!'], Response::HTTP_OK);
+    }
 
     /**
      * @Route("/api/task/{task}", name="Task_List", methods={"Get"})

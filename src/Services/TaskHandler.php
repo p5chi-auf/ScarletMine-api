@@ -3,6 +3,7 @@
 
 namespace App\Services;
 
+use App\Transformer\TaskTransformer;
 use App\Transformer\UserTransformer;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
@@ -16,8 +17,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\Security\Core\Security;
-
 
 class TaskHandler
 {
@@ -36,66 +35,55 @@ class TaskHandler
     /** @var ValidatorInterface */
     private $validator;
 
-    /** @var Security */
-    private $security;
+    /** @var UserTransformer */
+    private $transformer;
+
+    /** @var TaskTransformer */
+    private $taskTransformer;
 
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        Security $security,
-        UserTransformer $transformer
-    ) {
+        UserTransformer $transformer,
+        TaskTransformer $taskTransformer
+    )
+    {
         $this->em = $em;
         $this->userRepository = $em->getRepository(User::class);
         $this->projectRepository = $em->getRepository(Project::class);
         $this->statusRepository = $em->getRepository(Status::class);
         $this->validator = $validator;
-        $this->security = $security;
         $this->transformer = $transformer;
+        $this->taskTransformer = $taskTransformer;
     }
 
-    public function updateTask(TaskDTO $dto, Task $task): ConstraintViolationListInterface
+    public function updateTask(TaskDTO $dto, ?Task $task = null): ConstraintViolationListInterface
     {
-        $task->setTitle($dto->title);
-        $task->setDescription($dto->description);
-        $task->setCreatedBy($this->security->getUser());
-        $task->setCreatedAt(new \DateTime());
-        $task->setUpdatedAt(new \DateTime());
-
-        $relationErrors = $this->updateUsersTask($dto, $task);
-
-        $project = $this->projectRepository->find($dto->project);
-        if (!$project) {
-            $relationErrors[] =
-                new ConstraintViolation(
-                    \sprintf('Project %s not found', $project),
-                    '',
-                    [],
-                    $project,
-                    'project',
-                    $project
-                );
+        if ($task === null) {
+            $group = 'TaskAdd';
         } else {
-            $task->setProject($project);
+            $group = 'TaskEdit';
         }
-
-        $status = $this->statusRepository->find($dto->status);
-        if (!$status) {
-            $relationErrors[] =
-                new ConstraintViolation(
-                    \sprintf('Status %s not found', $status),
-                    '',
-                    [],
-                    $status,
-                    'status',
-                    $status
-                );
-        } else {
-            $task->setStatus($status);
-        }
+        $task = $this->taskTransformer->transformDTOToEntity($dto, $task);
 
         $errors = $this->validator->validate($task);
 
+        $dtoErrors = $this->validator->validate($dto, null, [$group]);
+        foreach ($dtoErrors as $error) {
+            $errors->add($error);
+        }
+
+        $projectErrors = $this->updateTaskProject($dto, $task);
+        foreach ($projectErrors as $error) {
+            $errors->add($error);
+        }
+
+        $statusErrors = $this->updateStatusTask($dto, $task);
+        foreach ($statusErrors as $error) {
+            $errors->add($error);
+        }
+
+        $relationErrors = $this->updateUsersTask($dto, $task);
         foreach ($relationErrors as $error) {
             $errors->add($error);
         }
@@ -151,6 +139,48 @@ class TaskHandler
         ];
 
         return $arr;
+    }
+
+    private function updateTaskProject(TaskDTO $dto, Task $task): array
+    {
+        $errors = [];
+        $project = $this->projectRepository->find($dto->project);
+        if (!$project) {
+            $errors[] =
+                new ConstraintViolation(
+                    \sprintf('Project %s not found', $project),
+                    '',
+                    [],
+                    $project,
+                    'project',
+                    $project
+                );
+        } else {
+            $task->setProject($project);
+        }
+
+        return $errors;
+    }
+
+    private function updateStatusTask(TaskDTO $dto, Task $task): array
+    {
+        $errors = [];
+        $status = $this->statusRepository->find($dto->status);
+        if (!$status) {
+            $errors[] =
+                new ConstraintViolation(
+                    \sprintf('Status %s not found', $status),
+                    '',
+                    [],
+                    $status,
+                    'status',
+                    $status
+                );
+        } else {
+            $task->setStatus($status);
+        }
+
+        return $errors;
     }
 
 }
