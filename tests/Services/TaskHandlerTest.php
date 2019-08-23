@@ -5,10 +5,11 @@ namespace App\Services;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
+use App\Entity\Task;
 use App\Entity\User;
 use App\Transformer\TaskTransformer;
-use App\Transformer\UserTransformer;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Doctrine\Common\Persistence\ObjectRepository;
 
@@ -24,7 +25,9 @@ class TaskHandlerTest extends KernelTestCase
         $handler = $this->getHandler();
         $dto = $this->getTaskDTO();
         $dto->title = '';
-        $result = $handler->updateTask($dto);
+
+        $result = $handler->updateTask($dto, new Task());
+
         $this->assertCount(1, $result);
         $this->assertEquals('title', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
@@ -64,12 +67,15 @@ class TaskHandlerTest extends KernelTestCase
                     [Status::class, $statusRepositoryMock],
                 ]
             );
+        $securityMock = $this->createMock(Security::class);
+        $securityMock->method('getUser')->willReturn(new User());
+
+        $transformer = new TaskTransformer($securityMock);
 
         return new TaskHandler(
             $emMock,
             static::$container->get('validator'),
-            static::$container->get(UserTransformer::class),
-            static::$container->get(TaskTransformer::class)
+            $transformer
         );
     }
 
@@ -105,5 +111,4 @@ class TaskHandlerTest extends KernelTestCase
         $this->assertEquals('status', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be null.', $result->get(0)->getMessage());
     }
-
 }

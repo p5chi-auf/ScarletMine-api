@@ -114,6 +114,4 @@ class TaskController extends AbstractController
 
         return new JsonResponse($list);
     }
-
 }
-

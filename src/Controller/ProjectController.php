@@ -2,8 +2,12 @@
 
 namespace App\Controller;
 
+use App\DTO\ProjectDTO;
 use App\Entity\Project;
+use App\Serializer\ValidationErrorSerializer;
 use App\Services\ProjectHandler;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\DeserializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,11 +16,30 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ProjectController extends AbstractController
 {
+    /**
+     * @var ProjectHandler
+     */
     private $handler;
 
-    public function __construct(ProjectHandler $handler)
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+    /**
+     * @var ValidationErrorSerializer
+     */
+    private $validationErrorSerializer;
+
+    public function __construct(
+        ProjectHandler $handler,
+        SerializerInterface $serializer,
+        ValidationErrorSerializer $validationErrorSerializer
+    )
     {
         $this->handler = $handler;
+        $this->serializer = $serializer;
+        $this->validationErrorSerializer = $validationErrorSerializer;
     }
 
     /**
@@ -24,15 +47,31 @@ class ProjectController extends AbstractController
      */
     public function addAction(Request $request): JsonResponse
     {
-        $project = new Project();
-        $data = \json_decode($request->getContent(), true);
+        $data = $request->getContent();
 
-        $errors = $this->handler->updateProject($data, $project);
+        /** @var DeserializationContext $context */
+        $context = DeserializationContext::create()->setGroups(array('ProjectAdd'));
+
+        $addProjectDTO = $this->serializer->deserialize(
+            $data,
+            ProjectDTO::class,
+            'json',
+            $context
+        );
+
+        $errors = $this->handler->updateProject($addProjectDTO);
         if ($errors->count()) {
-            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request',
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
-        return new JsonResponse($project->getId());
+        return new JsonResponse(['message' => 'Project added successfully'], Response::HTTP_OK);
     }
 
     /**
@@ -40,15 +79,31 @@ class ProjectController extends AbstractController
      */
     public function editAction(Request $request, Project $project): JsonResponse
     {
-        $data = \json_decode($request->getContent(), true);
+        $data = $request->getContent();
 
-        $errors = $this->handler->updateProject($data, $project);
+        /** @var DeserializationContext $context */
+        $context = DeserializationContext::create()->setGroups(array('ProjectEdit'));
 
+        $editProjectDTO = $this->serializer->deserialize(
+            $data,
+            ProjectDTO::class,
+            'json',
+            $context
+        );
+
+        $errors = $this->handler->updateProject($editProjectDTO, $project);
         if ($errors->count()) {
-            return new JsonResponse(['errors' => (string)$errors], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(
+                [
+                    'code' => Response::HTTP_BAD_REQUEST,
+                    'message' => 'Bad Request',
+                    'errors' => $this->validationErrorSerializer->serialize($errors),
+                ],
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
-        return new JsonResponse($project->getId());
+        return new JsonResponse(['message' => 'Project successfully edited!'], Response::HTTP_OK);
     }
 
     /**

@@ -1,10 +1,8 @@
 <?php
 
-
 namespace App\Services;
 
 use App\Transformer\TaskTransformer;
-use App\Transformer\UserTransformer;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
@@ -35,17 +33,13 @@ class TaskHandler
     /** @var ValidatorInterface */
     private $validator;
 
-    /** @var UserTransformer */
-    private $transformer;
-
     /** @var TaskTransformer */
-    private $taskTransformer;
+    private $transformer;
 
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        UserTransformer $transformer,
-        TaskTransformer $taskTransformer
+        TaskTransformer $transformer
     )
     {
         $this->em = $em;
@@ -54,37 +48,33 @@ class TaskHandler
         $this->statusRepository = $em->getRepository(Status::class);
         $this->validator = $validator;
         $this->transformer = $transformer;
-        $this->taskTransformer = $taskTransformer;
     }
 
     public function updateTask(TaskDTO $dto, ?Task $task = null): ConstraintViolationListInterface
     {
-        if ($task === null) {
-            $group = 'TaskAdd';
-        } else {
-            $group = 'TaskEdit';
-        }
-        $task = $this->taskTransformer->transformDTOToEntity($dto, $task);
+        $group = $task === null ? 'TaskAdd' : 'TaskEdit';
+
+        $task = $this->transformer->transformDTOToEntity($dto, $task);
 
         $errors = $this->validator->validate($task);
-
         $dtoErrors = $this->validator->validate($dto, null, [$group]);
+
         foreach ($dtoErrors as $error) {
             $errors->add($error);
         }
 
-        $projectErrors = $this->updateTaskProject($dto, $task);
-        foreach ($projectErrors as $error) {
+        $usersTaskErrors = $this->updateUsersTask($dto, $task);
+        foreach ($usersTaskErrors as $error) {
             $errors->add($error);
         }
 
-        $statusErrors = $this->updateStatusTask($dto, $task);
-        foreach ($statusErrors as $error) {
+        $projectTasksError = $this->updateProjectTasks($dto, $task);
+        foreach ($projectTasksError as $error) {
             $errors->add($error);
         }
 
-        $relationErrors = $this->updateUsersTask($dto, $task);
-        foreach ($relationErrors as $error) {
+        $statusTaskError = $this->updateStatusTask($dto, $task);
+        foreach ($statusTaskError as $error) {
             $errors->add($error);
         }
 
@@ -96,52 +86,7 @@ class TaskHandler
         return $errors;
     }
 
-    public function updateUsersTask(TaskDTO $dto, Task $task): array
-    {
-        $relationErrors = [];
-        $task->clearUsersTask();
-
-        foreach ($dto->users as $userId) {
-            $userEntity = $this->userRepository->find($userId);
-
-            if (!$userEntity) {
-                $relationErrors[] =
-                    new ConstraintViolation(
-                        \sprintf('User %s not found', $userId),
-                        '',
-                        [],
-                        $userId,
-                        'users',
-                        $userId
-                    );
-                continue;
-            }
-            $task->addUser($userEntity);
-        }
-
-        return $relationErrors;
-    }
-
-
-    public function getList(Task $task): array
-    {
-        $listUsers = [];
-        foreach ($task->getUsers() as $user) {
-            $userDTO = $this->transformer->transformEntityToDTO($user);
-            $listUsers[] = $userDTO;
-        }
-        $arr[] = [
-            'id' => $task->getId(),
-            'title' => $task->getTitle(),
-            'description' => $task->getDescription(),
-            'status' => $task->getStatus()->getId(),
-            'users' => $listUsers,
-        ];
-
-        return $arr;
-    }
-
-    private function updateTaskProject(TaskDTO $dto, Task $task): array
+    private function updateProjectTasks(TaskDTO $dto, Task $task): array
     {
         $errors = [];
         $project = $this->projectRepository->find($dto->project);
@@ -158,7 +103,6 @@ class TaskHandler
         } else {
             $task->setProject($project);
         }
-
         return $errors;
     }
 
@@ -183,4 +127,47 @@ class TaskHandler
         return $errors;
     }
 
+    private function updateUsersTask(TaskDTO $dto, Task $task): array
+    {
+        $errors = [];
+        $task->clearUsersTask();
+
+        foreach ($dto->users as $userId) {
+            $userEntity = $this->userRepository->find($userId);
+
+            if (!$userEntity) {
+                $errors[] =
+                    new ConstraintViolation(
+                        \sprintf('User %s not found', $userId),
+                        '',
+                        [],
+                        $userId,
+                        'users',
+                        $userId
+                    );
+                continue;
+            }
+            $task->addUser($userEntity);
+        }
+
+        return $errors;
+    }
+
+    public function getList(Task $task): array
+    {
+        $listUsers = [];
+        foreach ($task->getUsers() as $user) {
+            $userDTO = $this->transformer->transformEntityToDTO($user);
+            $listUsers[] = $userDTO;
+        }
+        $arr[] = [
+            'id' => $task->getId(),
+            'title' => $task->getTitle(),
+            'description' => $task->getDescription(),
+            'status' => $task->getStatus()->getId(),
+            'users' => $listUsers,
+        ];
+
+        return $arr;
+    }
 }
