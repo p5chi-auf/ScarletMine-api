@@ -5,7 +5,6 @@ namespace App\Services;
 use App\DTO\TaskDTO;
 use App\Entity\Project;
 use App\Entity\Status;
-use App\Entity\Task;
 use App\Entity\User;
 use App\Transformer\TaskTransformer;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,9 +25,9 @@ class TaskHandlerTest extends KernelTestCase
         $dto = $this->getTaskDTO();
         $dto->title = '';
 
-        $result = $handler->updateTask($dto, new Task());
+        $result = $handler->updateTask($dto);
 
-        $this->assertCount(1, $result);
+        $this->assertCount(2, $result);
         $this->assertEquals('title', $result->get(0)->getPropertyPath());
         $this->assertEquals('This value should not be blank.', $result->get(0)->getMessage());
     }
@@ -70,7 +69,7 @@ class TaskHandlerTest extends KernelTestCase
         $securityMock = $this->createMock(Security::class);
         $securityMock->method('getUser')->willReturn(new User());
 
-        $transformer = new TaskTransformer($securityMock);
+        $transformer = new TaskTransformer($securityMock, $emMock);
 
         return new TaskHandler(
             $emMock,

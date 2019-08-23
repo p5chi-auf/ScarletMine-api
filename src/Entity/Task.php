@@ -203,7 +203,7 @@ class Task
         return $this->status;
     }
 
-    public function setStatus(Status $status): self
+    public function setStatus(?Status $status): self
     {
         $this->status = $status;
 
