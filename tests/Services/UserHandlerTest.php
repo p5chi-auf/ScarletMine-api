@@ -11,10 +11,32 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class UserHandlerTest extends KernelTestCase
 {
+    private $em;
+
     public function setUp()
     {
         self::bootKernel();
+
+        parent::setUp();
+
+        $this->em = static::$container->get('doctrine')->getManager();
+        $this->em->getConnection()->beginTransaction();
     }
+
+    protected function tearDown()
+    {
+        if ($this->em->getConnection()->isTransactionActive()) {
+            try {
+                $this->em->getConnection()->rollBack();
+            } catch (\Exception $e) {
+            }
+        }
+
+        parent::tearDown();
+
+        $this->em = null;
+    }
+
 
     private function getHandler(): UserHandler
     {
@@ -219,6 +241,13 @@ class UserHandlerTest extends KernelTestCase
 
     public function testValidateNewExistingUsername(): void
     {
+        $existing = new User();
+        $existing->setUsername('existing');
+        $existing->setEmail('test@test.com');
+        $existing->setFullName('name');
+        $this->em->persist($existing);
+        $this->em->flush();
+
         $repositoryMock = $this->createMock(ObjectRepository::class);
         $emMock = $this->createMock(EntityManagerInterface::class);
         $repositoryMock
@@ -230,7 +259,7 @@ class UserHandlerTest extends KernelTestCase
 
         $handler = $this->getHandler();
         $dto = $this->getUserDTO();
-        $dto->username = 'iguidea';
+        $dto->username = 'existing';
 
         $result = $handler->updateUser($dto);
 
@@ -241,6 +270,13 @@ class UserHandlerTest extends KernelTestCase
 
     public function testValidateNewExistingEmail(): void
     {
+        $existing = new User();
+        $existing->setUsername('existing');
+        $existing->setEmail('test@test.com');
+        $existing->setFullName('name');
+        $this->em->persist($existing);
+        $this->em->flush();
+
         $repositoryMock = $this->createMock(ObjectRepository::class);
         $emMock = $this->createMock(EntityManagerInterface::class);
         $repositoryMock
@@ -252,7 +288,7 @@ class UserHandlerTest extends KernelTestCase
 
         $handler = $this->getHandler();
         $dto = $this->getUserDTO();
-        $dto->email = 'iguidea@gmail.com';
+        $dto->email = 'test@test.com';
 
         $result = $handler->updateUser($dto);
 
