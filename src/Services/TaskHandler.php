@@ -183,4 +183,11 @@ class TaskHandler
         return $errors;
     }
 
+    public function updateTaskStatus(Task $task, Status $status)
+    {
+        $task->setStatus($status);
+        $this->em->persist($status);
+        $this->em->flush();
+    }
+
 }

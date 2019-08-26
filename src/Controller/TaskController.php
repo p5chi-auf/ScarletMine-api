@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\DTO\TaskDTO;
+use App\Entity\Status;
 use App\Entity\Task;
 use App\Serializer\ValidationErrorSerializer;
 use App\Services\TaskHandler;
@@ -35,7 +36,8 @@ class TaskController extends AbstractController
         TaskHandler $handler,
         SerializerInterface $serializer,
         ValidationErrorSerializer $validationErrorSerializer
-    ) {
+    )
+    {
         $this->handler = $handler;
         $this->serializer = $serializer;
         $this->validationErrorSerializer = $validationErrorSerializer;
@@ -115,5 +117,14 @@ class TaskController extends AbstractController
         return new JsonResponse($list);
     }
 
-}
+    /**
+     * @Route("/api/task/{task}/{status}", name="Status_Edit", methods={"POST"})
+     */
 
+    public function editStatus(Task $task, Status $status): JsonResponse
+    {
+        $this->handler->updateTaskStatus($task, $status);
+
+        return new JsonResponse(['message' => 'Status successfully edited!'], Response::HTTP_OK);
+    }
+}
