@@ -33,32 +33,35 @@ class TaskHandler
     /** @var ValidatorInterface */
     private $validator;
 
-    /** @var TaskTransformer */
+    /** @var UserTransformer */
     private $transformer;
+
+    /** @var TaskTransformer */
+    private $taskTransformer;
 
     public function __construct(
         EntityManagerInterface $em,
         ValidatorInterface $validator,
-        TaskTransformer $transformer
-    )
-    {
+        UserTransformer $transformer,
+        TaskTransformer $taskTransformer
+    ) {
         $this->em = $em;
         $this->userRepository = $em->getRepository(User::class);
         $this->projectRepository = $em->getRepository(Project::class);
         $this->statusRepository = $em->getRepository(Status::class);
         $this->validator = $validator;
         $this->transformer = $transformer;
+        $this->taskTransformer = $taskTransformer;
     }
 
     public function updateTask(TaskDTO $dto, ?Task $task = null): ConstraintViolationListInterface
     {
         $group = $task === null ? 'TaskAdd' : 'TaskEdit';
-
-        $task = $this->transformer->transformDTOToEntity($dto, $task);
+        $task = $this->taskTransformer->transformDTOToEntity($dto, $task);
 
         $errors = $this->validator->validate($task);
-        $dtoErrors = $this->validator->validate($dto, null, [$group]);
 
+        $dtoErrors = $this->validator->validate($dto, null, [$group]);
         foreach ($dtoErrors as $error) {
             $errors->add($error);
         }
@@ -68,7 +71,7 @@ class TaskHandler
             $errors->add($error);
         }
 
-        $projectTasksError = $this->updateProjectTasks($dto, $task);
+        $projectTasksError = $this->updateTaskProject($dto, $task);
         foreach ($projectTasksError as $error) {
             $errors->add($error);
         }
@@ -86,7 +89,25 @@ class TaskHandler
         return $errors;
     }
 
-    private function updateProjectTasks(TaskDTO $dto, Task $task): array
+    public function getList(Task $task): array
+    {
+        $listUsers = [];
+        foreach ($task->getUsers() as $user) {
+            $userDTO = $this->transformer->transformEntityToDTO($user);
+            $listUsers[] = $userDTO;
+        }
+        $arr[] = [
+            'id' => $task->getId(),
+            'title' => $task->getTitle(),
+            'description' => $task->getDescription(),
+            'status' => $task->getStatus()->getId(),
+            'users' => $listUsers,
+        ];
+
+        return $arr;
+    }
+
+    private function updateTaskProject(TaskDTO $dto, Task $task): array
     {
         $errors = [];
         $project = $this->projectRepository->find($dto->project);
@@ -103,6 +124,7 @@ class TaskHandler
         } else {
             $task->setProject($project);
         }
+
         return $errors;
     }
 
@@ -158,23 +180,5 @@ class TaskHandler
         }
 
         return $errors;
-    }
-
-    public function getList(Task $task): array
-    {
-        $listUsers = [];
-        foreach ($task->getUsers() as $user) {
-            $userDTO = $this->transformer->transformEntityToDTO($user);
-            $listUsers[] = $userDTO;
-        }
-        $arr[] = [
-            'id' => $task->getId(),
-            'title' => $task->getTitle(),
-            'description' => $task->getDescription(),
-            'status' => $task->getStatus()->getId(),
-            'users' => $listUsers,
-        ];
-
-        return $arr;
     }
 }
